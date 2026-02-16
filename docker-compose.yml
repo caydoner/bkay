@@ -1,0 +1,80 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgis/postgis:15-3.3
+    container_name: paydas_db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: localpassword
+      POSTGRES_DB: paydas_analizi
+    command:
+      - "postgres"
+      - "-c"
+      - "shared_buffers=4GB"
+      - "-c"
+      - "effective_cache_size=12GB"
+      - "-c"
+      - "work_mem=64MB"
+      - "-c"
+      - "maintenance_work_mem=1GB"
+      - "-c"
+      - "checkpoint_completion_target=0.9"
+      - "-c"
+      - "wal_buffers=16MB"
+      - "-c"
+      - "random_page_cost=1.1"
+      - "-c"
+      - "effective_io_concurrency=200"
+      - "-c"
+      - "max_worker_processes=8"
+      - "-c"
+      - "max_parallel_workers_per_gather=4"
+      - "-c"
+      - "max_parallel_workers=8"
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    deploy:
+      resources:
+        reservations:
+          memory: 8gb
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: paydas_backend
+    volumes:
+      - ./backend:/app
+    environment:
+      - DATABASE_URL=postgresql://postgres:localpassword@db:5432/paydas_analizi
+      # - DATABASE_URL=postgresql://postgres.hzmdqymelppfhbbfpsie:CDGrfg52432..@aws-1-ap-northeast-2.pooler.supabase.com:6543/postgres
+      - JWT_SECRET=local_secret_key_123
+      - WEB_CONCURRENCY=4
+    command: uvicorn main:app --host 0.0.0.0 --port 5173 --workers 1
+    ports:
+      - "5173:5173"
+    depends_on:
+      - db
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: paydas_frontend
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    environment:
+      - VITE_API_URL=http://localhost:5173
+      - VITE_SUPABASE_URL=http://localhost:54321 # Mock or unused for now
+      - VITE_SUPABASE_ANON_KEY=local-anon-key
+    ports:
+      - "5174:5174"
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:
