@@ -306,6 +306,21 @@ const MapContainer: React.FC<MapContainerProps> = ({
             // Initial Draw Sync
             if (initialGeometry) draw.add(initialGeometry);
 
+            // Setup Drawing Event Listeners
+            map.on('draw.create', (e) => {
+                lastDrawCompletionTime.current = Date.now();
+                if (onDrawCompleteRef.current && e.features && e.features.length > 0) {
+                    onDrawCompleteRef.current(e.features[0]);
+                }
+            });
+
+            map.on('draw.update', (e) => {
+                lastDrawCompletionTime.current = Date.now();
+                if (onDrawCompleteRef.current && e.features && e.features.length > 0) {
+                    onDrawCompleteRef.current(e.features[0]);
+                }
+            });
+
             // Re-apply study area visibility if it's already defined by initialGeometry
             // (Standard drawing layers usually don't need manual opacity, they use styles defined above)
 
