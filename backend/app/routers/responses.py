@@ -151,31 +151,61 @@ async def export_responses_gpkg(
         raise HTTPException(status_code=404, detail="No responses found to export")
 
     # 2. Process Data for multiple layers
-    full_data_list = []      # stakeholder_responses
-    intersection_geoms = []   # To collect geometries for intersection count analysis
+    # layers_data will be: { layer_name: [list_of_records] }
+    layers_data = {}
+    intersection_geoms = [] # For grid_intersections analysis
     
+    def add_to_layer(layer_name, row):
+        clean_name = re.sub(r'[^a-zA-Z0-9_]', '_', layer_name.lower()).strip('_')
+        if not clean_name: clean_name = "layer"
+        if clean_name not in layers_data:
+            layers_data[clean_name] = []
+        layers_data[clean_name].append(row)
+
     for r in responses:
-        # Base attributes
-        base_row = {
+        # Base attributes for all layers
+        base_attrs = {
             "id": str(r.id),
             "user_id": r.user_id,
             "h3_index": r.h3_index,
             "created_at": r.created_at.isoformat() if r.created_at else None
         }
         
-        # Flatten response_data
+        # Flatten non-geometry attributes for inclusion in every layer
+        extra_attrs = {}
+        geometries_found = {} # { field_name: shapely_geom }
+        
         if r.response_data:
             for k, v in r.response_data.items():
+                # Detect Geometry
+                if isinstance(v, dict) and "type" in v and "coordinates" in v:
+                    try:
+                        geometries_found[k] = shape(v)
+                    except Exception: pass
+                    continue
+                
+                # Detect H3 Grid Selection
+                if isinstance(v, dict) and v.get("type") == "GridSelection":
+                    continue
+
+                # Normal Attribute
                 clean_key = re.sub(r'[^a-zA-Z0-9_]', '_', k.lower()).strip('_')
                 if not clean_key: clean_key = f"attr_{k}"
                 if isinstance(v, (dict, list)):
-                    if isinstance(v, dict) and "type" in v and "coordinates" in v:
-                        continue
-                    base_row[clean_key] = json.dumps(v, ensure_ascii=False)
+                    extra_attrs[clean_key] = json.dumps(v, ensure_ascii=False)
                 else:
-                    base_row[clean_key] = v
+                    extra_attrs[clean_key] = v
         
-        # Extract H3 indices
+        # Row data (excluding geometry)
+        row_attributes = {**base_attrs, **extra_attrs}
+        
+        # 1. Process Hand-drawn Geometries (Each as a separate layer)
+        for field_name, geom in geometries_found.items():
+            if geom and not geom.is_empty:
+                add_to_layer(field_name, {**row_attributes, "geometry": geom})
+                intersection_geoms.append(geom)
+
+        # 2. Process H3 Grid Geometries (As a 'grid_selections' layer)
         row_h3_indices = []
         if r.h3_index:
             row_h3_indices.append(r.h3_index)
@@ -189,8 +219,6 @@ async def export_responses_gpkg(
                     elif isinstance(indices, str):
                         row_h3_indices.append(indices)
         
-        # 1. H3 Geometry
-        h3_poly = None
         if row_h3_indices:
             h3_polys = []
             from shapely.ops import unary_union
@@ -199,44 +227,23 @@ async def export_responses_gpkg(
                     coords = h3.cell_to_boundary(h_idx)
                     h3_polys.append(Polygon([(lng, lat) for lat, lng in coords]))
                 except Exception: pass
+            
             if h3_polys:
-                h3_poly = unary_union(h3_polys)
-            
-        # 2. Hand-drawn Geometry
-        hand_drawn_poly = None
-        if r.geom:
-            try:
-                hand_drawn_poly = to_shape(r.geom)
-            except Exception: pass
-            
-        # Fallback: check response_data for geometries if r.geom is empty
-        if not hand_drawn_poly and r.response_data:
-            for v in r.response_data.values():
-                if isinstance(v, dict) and v.get("type") in ["Polygon", "Point", "LineString"]:
-                    try:
-                        hand_drawn_poly = shape(v)
-                        break
-                    except Exception: pass
-        
-        # 3. stakeholder_responses Layer (Priority: Hand-drawn > H3)
-        priority_geom = hand_drawn_poly or h3_poly
-        full_data_list.append({**base_row, "geometry": priority_geom})
-        
-        # 4. Collection for high_res_grid_intersections
-        # Logic: use the combined geometry of the response (Hand-drawn AND/OR H3)
-        # We use union here because the user wants a count of overlaps
-        resp_geom = None
-        if hand_drawn_poly and h3_poly:
-            try:
-                resp_geom = hand_drawn_poly.union(h3_poly)
-            except Exception: pass
-        else:
-            resp_geom = hand_drawn_poly or h3_poly
-            
-        if resp_geom and not resp_geom.is_empty:
-            intersection_geoms.append(resp_geom)
+                h3_union = unary_union(h3_polys)
+                if not h3_union.is_empty:
+                    add_to_layer("grid_selections", {**row_attributes, "geometry": h3_union})
+                    intersection_geoms.append(h3_union)
 
-    # 3. Fetch High-Res Grids
+        # 3. Legacy 'geom' column fallback (if not already captured)
+        if r.geom and not geometries_found:
+            try:
+                legacy_geom = to_shape(r.geom)
+                if legacy_geom and not legacy_geom.is_empty:
+                    add_to_layer("main_geometry", {**row_attributes, "geometry": legacy_geom})
+                    intersection_geoms.append(legacy_geom)
+            except Exception: pass
+
+    # 3. High-Res Grid Intersections (Legacy analysis layer)
     high_res_grid_list = []
     if intersection_geoms:
         try:
@@ -261,22 +268,16 @@ async def export_responses_gpkg(
                 
                 grid_result = await db.execute(grid_query)
                 grid_rows = grid_result.all()
-                
-                # Spatial index for intersection count
                 tree = STRtree(intersection_geoms)
                 
                 for grow in grid_rows:
                     try:
                         cell_poly = to_shape(grow.geometry)
-                        # Count intersections using spatial index
-                        # query(predicate='intersects') returns indices of geometries in tree that intersect cell_poly
                         intersecting_indices = tree.query(cell_poly, predicate='intersects')
-                        count = len(intersecting_indices)
-                        
                         high_res_grid_list.append({
                             "h3_index": grow.h3_index,
                             "resolution": grow.resolution,
-                            "intersection_count": count,
+                            "intersection_count": len(intersecting_indices),
                             "geometry": cell_poly
                         })
                     except Exception: pass
@@ -286,20 +287,25 @@ async def export_responses_gpkg(
     fd, path = tempfile.mkstemp(suffix=".gpkg")
     try:
         os.close(fd)
-        # Check available engines
         engine = 'pyogrio'
         try:
             import pyogrio
         except ImportError:
             engine = 'fiona'
         
-        # Layer 1: stakeholder_responses
-        gdf_full = gpd.GeoDataFrame(pd.DataFrame(full_data_list), geometry="geometry", crs="EPSG:4326")
-        gdf_full.to_file(path, driver="GPKG", layer="stakeholder_responses", engine=engine)
+        # Write custom layers
+        first_layer = True
+        for layer_name, data in layers_data.items():
+            if not data: continue
+            gdf = gpd.GeoDataFrame(pd.DataFrame(data), geometry="geometry", crs="EPSG:4326")
+            mode = 'w' if first_layer else 'a'
+            gdf.to_file(path, driver="GPKG", layer=layer_name, engine=engine, mode=mode)
+            first_layer = False
         
-        # Layer 2: grid_intersections
+        # Write grid_intersections layer
         if high_res_grid_list:
-            gpd.GeoDataFrame(pd.DataFrame(high_res_grid_list), geometry="geometry", crs="EPSG:4326").to_file(path, driver="GPKG", layer="grid_intersections", engine=engine, mode='a')
+            mode = 'w' if first_layer else 'a'
+            gpd.GeoDataFrame(pd.DataFrame(high_res_grid_list), geometry="geometry", crs="EPSG:4326").to_file(path, driver="GPKG", layer="grid_intersections", engine=engine, mode=mode)
         
         return FileResponse(
             path, 
