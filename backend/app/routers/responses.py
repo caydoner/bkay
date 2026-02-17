@@ -219,22 +219,46 @@ async def export_responses_gpkg(
                     elif isinstance(indices, str):
                         row_h3_indices.append(indices)
         
-        if row_h3_indices:
-            h3_polys = []
-            from shapely.ops import unary_union
-            for h_idx in set(row_h3_indices):
-                try:
-                    coords = h3.cell_to_boundary(h_idx)
-                    h3_polys.append(Polygon([(lng, lat) for lat, lng in coords]))
-                except Exception: pass
-            
-            if h3_polys:
-                h3_union = unary_union(h3_polys)
-                if not h3_union.is_empty:
-                    add_to_layer("grid_selections", {**row_attributes, "geometry": h3_union})
-                    intersection_geoms.append(h3_union)
+        # 2. Process H3 Grid Geometries (Categorized by field name)
+        response_h3_geoms = [] # To avoid duplicates and track primary h3_index
+        
+        if r.response_data:
+            for k, v in r.response_data.items():
+                if isinstance(v, dict) and v.get("type") == "GridSelection":
+                    indices = v.get("h3_indices") or v.get("original_selection")
+                    if not indices: continue
+                    
+                    if isinstance(indices, str): indices = [indices]
+                    
+                    h3_polys = []
+                    from shapely.ops import unary_union
+                    for h_idx in set(indices):
+                        try:
+                            coords = h3.cell_to_boundary(h_idx)
+                            h3_polys.append(Polygon([(lng, lat) for lat, lng in coords]))
+                        except Exception: pass
+                    
+                    if h3_polys:
+                        h3_union = unary_union(h3_polys)
+                        if not h3_union.is_empty:
+                            layer_name = f"grid_{k}"
+                            add_to_layer(layer_name, {**row_attributes, "geometry": h3_union})
+                            intersection_geoms.append(h3_union)
+                            response_h3_geoms.append(h3_union)
 
-        # 3. Legacy 'geom' column fallback (if not already captured)
+        # Handle primary r.h3_index if not already part of a field selection
+        if r.h3_index:
+            try:
+                coords = h3.cell_to_boundary(r.h3_index)
+                primary_poly = Polygon([(lng, lat) for lat, lng in coords])
+                # Check if this primary poly is already covered to avoid extra layers/rows
+                is_covered = any(primary_poly.within(g) for g in response_h3_geoms)
+                if not is_covered:
+                    add_to_layer("grid_primary_selection", {**row_attributes, "geometry": primary_poly})
+                    intersection_geoms.append(primary_poly)
+            except Exception: pass
+
+        # 3. Legacy 'geom' column fallback (if not already captured by manual drawing fields)
         if r.geom and not geometries_found:
             try:
                 legacy_geom = to_shape(r.geom)
