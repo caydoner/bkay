@@ -675,29 +675,29 @@ const ProjectDetails: React.FC = () => {
         }
     };
 
-    if (loading) return <div className="p-10 text-center text-primary-600 font-bold flex items-center justify-center gap-2"><Loader2 className="h-6 w-6 animate-spin" /> Yükleniyor...</div>;
+    if (loading) return <div className="p-10 text-center text-cyan-400 font-bold flex items-center justify-center gap-2"><Loader2 className="h-6 w-6 animate-spin" /> Yükleniyor...</div>;
 
     return (
         <>
-            <div className="flex-1 flex flex-col bg-gray-50 overflow-hidden">
+            <div className="flex-1 flex flex-col bg-slate-900/50 text-slate-200 overflow-hidden">
                 {/* Header */}
-                <header className="bg-white border-b border-gray-100 p-4 flex justify-between items-center shadow-sm z-10">
+                <header className="glass-panel border-white/5 border-b border-white/10 p-4 flex justify-between items-center shadow-[0_0_15px_rgba(0,0,0,0.5)] z-10">
                     <div className="flex items-center gap-4">
-                        <button onClick={() => navigate('/admin')} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-                            <ChevronLeft className="h-6 w-6 text-gray-600" />
+                        <button onClick={() => navigate('/admin')} className="p-2 hover:bg-slate-800 rounded-lg transition-colors">
+                            <ChevronLeft className="h-6 w-6 text-slate-300" />
                         </button>
-                        <div className="h-10 w-10 bg-primary-100 rounded-xl flex items-center justify-center text-primary-600">
+                        <div className="h-10 w-10 bg-cyan-500/20 border border-cyan-500/30 rounded-xl flex items-center justify-center text-cyan-400">
                             <Database className="h-6 w-6" />
                         </div>
                         <div>
-                            <h1 className="font-bold text-gray-900">{project?.name}</h1>
-                            <p className="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Proje Yönetimi</p>
+                            <h1 className="font-bold text-white">{project?.name}</h1>
+                            <p className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Proje Yönetimi</p>
                         </div>
                     </div>
                 </header>
 
                 {/* Tabs */}
-                <div className="bg-white border-b border-gray-100 px-6 sm:px-10 flex gap-8 overflow-x-auto scrollbar-hide">
+                <div className="glass-panel border-white/5 border-b border-white/10 px-6 sm:px-10 flex gap-8 overflow-x-auto scrollbar-hide">
                     {[
                         { id: 'general', label: 'Genel', icon: Settings },
                         { id: 'map', label: 'Harita', icon: MapIcon },
@@ -710,8 +710,8 @@ const ProjectDetails: React.FC = () => {
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id as any)}
                             className={`flex items-center gap-2 py-4 border-b-2 font-bold transition-all whitespace-nowrap text-sm ${activeTab === tab.id
-                                ? 'border-primary-600 text-primary-600'
-                                : 'border-transparent text-gray-400 hover:text-gray-600'
+                                ? 'border-primary-600 text-cyan-400'
+                                : 'border-transparent text-slate-500 hover:text-slate-300'
                                 }`}
                         >
                             <tab.icon className="h-4 w-4" />
@@ -721,29 +721,29 @@ const ProjectDetails: React.FC = () => {
                 </div>
 
                 {/* Content */}
-                <div className={`flex-1 flex flex-col min-h-0 bg-gray-50/50 ${activeTab === 'map' ? 'p-0 overflow-hidden' : 'p-4 sm:p-8 overflow-y-auto pb-32'}`}>
+                <div className={`flex-1 flex flex-col min-h-0 bg-slate-950/50 text-slate-200 ${activeTab === 'map' ? 'p-0 overflow-hidden' : 'p-4 sm:p-8 overflow-y-auto pb-32'}`}>
                     {activeTab === 'general' && (
                         <div className="max-w-2xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-300">
-                            <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100 space-y-6">
+                            <div className="glass-panel border-white/5 rounded-3xl p-8 shadow-[0_0_15px_rgba(0,0,0,0.5)] border border-white/10 space-y-6">
                                 <div className="space-y-2">
-                                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider px-1">Proje Adı</label>
+                                    <label className="text-xs font-bold text-slate-400 uppercase tracking-wider px-1">Proje Adı</label>
                                     <input
                                         type="text"
                                         value={project?.name || ''}
                                         onChange={(e) => setProject({ ...project, name: e.target.value })}
-                                        className="w-full bg-gray-50 border border-gray-100 py-3.5 px-4 rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white transition-all text-gray-900 font-medium"
+                                        className="w-full bg-slate-900/50 text-slate-200 border border-white/10 py-3.5 px-4 rounded-2xl focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:bg-white/5 transition-all text-white font-medium"
                                     />
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider px-1">Açıklama</label>
+                                    <label className="text-xs font-bold text-slate-400 uppercase tracking-wider px-1">Açıklama</label>
                                     <textarea
                                         rows={4}
                                         value={project?.description || ''}
                                         onChange={(e) => setProject({ ...project, description: e.target.value })}
-                                        className="w-full bg-gray-50 border border-gray-100 py-3.5 px-4 rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white transition-all text-gray-900 font-medium resize-none"
+                                        className="w-full bg-slate-900/50 text-slate-200 border border-white/10 py-3.5 px-4 rounded-2xl focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:bg-white/5 transition-all text-white font-medium resize-none"
                                     />
                                 </div>
-                                <button onClick={handleSaveGeneral} className="w-full bg-primary-600 text-white py-4 rounded-2xl font-bold shadow-lg shadow-primary-200 hover:bg-primary-700 transition-all flex items-center justify-center gap-2">
+                                <button onClick={handleSaveGeneral} className="w-full bg-cyan-600 text-white py-4 rounded-2xl font-bold shadow-[0_0_15px_rgba(6,182,212,0.4)] hover:bg-cyan-500 transition-all flex items-center justify-center gap-2">
                                     <Save className="h-5 w-5" /> Değişiklikleri Kaydet
                                 </button>
                             </div>
@@ -771,10 +771,10 @@ const ProjectDetails: React.FC = () => {
                                     }
                                 }}
                             />
-                            <div className="absolute top-4 right-4 bg-white/95 backdrop-blur-md p-4 rounded-2xl shadow-xl border border-gray-100 flex flex-col gap-4 z-10 w-72">
+                            <div className="absolute top-4 right-4 bg-slate-900/80 backdrop-blur-xl border border-white/5 backdrop-blur-md p-4 rounded-2xl shadow-xl border border-white/10 flex flex-col gap-4 z-10 w-72">
                                 {/* Area Selection */}
                                 <div className="space-y-2">
-                                    <span className="text-xs font-bold text-gray-600 uppercase tracking-tight">Alan Seçimi</span>
+                                    <span className="text-xs font-bold text-slate-300 uppercase tracking-tight">Alan Seçimi</span>
 
                                     {/* Area Dropdown */}
                                     <select
@@ -792,7 +792,7 @@ const ProjectDetails: React.FC = () => {
                                                 }
                                             }
                                         }}
-                                        className="w-full bg-gray-50 border border-gray-200 py-2 px-3 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary-500"
+                                        className="w-full bg-slate-900/50 text-slate-200 border border-white/10 py-2 px-3 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
                                     >
                                         <option value="" disabled>Alan Seçin...</option>
                                         {projectAreas.map((area) => (
@@ -815,13 +815,13 @@ const ProjectDetails: React.FC = () => {
                                     )}
 
                                     {/* New Area Input */}
-                                    <div className="flex gap-2 pt-2 border-t border-gray-100">
+                                    <div className="flex gap-2 pt-2 border-t border-white/10">
                                         <input
                                             type="text"
                                             placeholder="Yeni alan adı..."
                                             value={newAreaName}
                                             onChange={(e) => setNewAreaName(e.target.value)}
-                                            className="flex-1 bg-gray-50 border border-gray-200 py-2 px-3 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-primary-500"
+                                            className="flex-1 bg-slate-900/50 text-slate-200 border border-white/10 py-2 px-3 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
                                         />
                                         <button
                                             onClick={handleSaveAsArea}
@@ -834,19 +834,19 @@ const ProjectDetails: React.FC = () => {
                                     </div>
                                 </div>
 
-                                <div className="border-t border-gray-100" />
+                                <div className="border-t border-white/10" />
 
                                 {/* Grid Settings */}
                                 <div className="space-y-3">
                                     <div className="flex items-center justify-between">
-                                        <span className="text-xs font-bold text-gray-600 uppercase tracking-tight">Grid Ayarları</span>
-                                        <span className="text-[9px] text-gray-400 italic">~yaklaşık değerler</span>
+                                        <span className="text-xs font-bold text-slate-300 uppercase tracking-tight">Grid Ayarları</span>
+                                        <span className="text-[9px] text-slate-500 italic">~yaklaşık değerler</span>
                                     </div>
 
                                     {/* Current Resolution Indicator */}
                                     {currentResolution !== null && (
-                                        <div className="bg-primary-50 rounded-lg p-2 text-center">
-                                            <span className="text-[10px] text-primary-600 font-bold">
+                                        <div className="bg-cyan-500/10 rounded-lg p-2 text-center">
+                                            <span className="text-[10px] text-cyan-400 font-bold">
                                                 Gösterilen: Çözünürlük {currentResolution} (Zoom: {currentZoom})
                                             </span>
                                         </div>
@@ -854,9 +854,9 @@ const ProjectDetails: React.FC = () => {
 
                                     {/* Min Cell Area (km²) */}
                                     <div className="space-y-1">
-                                        <label className="text-[10px] text-gray-500 flex justify-between">
+                                        <label className="text-[10px] text-slate-400 flex justify-between">
                                             <span>En Küçük Grid:</span>
-                                            <span className="font-bold text-gray-700">
+                                            <span className="font-bold text-slate-300">
                                                 ~{minCellAreaKm2 < 0.001 ? `${(minCellAreaKm2 * 1000000).toFixed(0)} m²` : `${minCellAreaKm2.toFixed(3)} km²`}
                                             </span>
                                         </label>
@@ -873,9 +873,9 @@ const ProjectDetails: React.FC = () => {
 
                                     {/* Max Cell Area (km²) */}
                                     <div className="space-y-1">
-                                        <label className="text-[10px] text-gray-500 flex justify-between">
+                                        <label className="text-[10px] text-slate-400 flex justify-between">
                                             <span>En Büyük Grid:</span>
-                                            <span className="font-bold text-gray-700">~{maxCellAreaKm2.toFixed(1)} km²</span>
+                                            <span className="font-bold text-slate-300">~{maxCellAreaKm2.toFixed(1)} km²</span>
                                         </label>
                                         <input
                                             type="range"
@@ -890,9 +890,9 @@ const ProjectDetails: React.FC = () => {
 
                                     {/* Number of Resolution Levels */}
                                     <div className="space-y-1">
-                                        <label className="text-[10px] text-gray-500 flex justify-between">
+                                        <label className="text-[10px] text-slate-400 flex justify-between">
                                             <span>Çözünürlük Sayısı:</span>
-                                            <span className="font-bold text-gray-700">{numResolutions}</span>
+                                            <span className="font-bold text-slate-300">{numResolutions}</span>
                                         </label>
                                         <input
                                             type="range"
@@ -905,8 +905,8 @@ const ProjectDetails: React.FC = () => {
                                     </div>
                                 </div>
 
-                                <div className="flex flex-col gap-2 border-t border-gray-100 pt-3">
-                                    <label className="flex items-center justify-center gap-2 w-full bg-gray-50 border border-gray-200 text-gray-700 py-2 rounded-xl font-bold cursor-pointer hover:bg-gray-100 transition-all text-xs">
+                                <div className="flex flex-col gap-2 border-t border-white/10 pt-3">
+                                    <label className="flex items-center justify-center gap-2 w-full bg-slate-900/50 text-slate-200 border border-white/10 text-slate-300 py-2 rounded-xl font-bold cursor-pointer hover:bg-slate-800 transition-all text-xs">
                                         <FileUp className="h-4 w-4" /> KML/GeoJSON Yükle
                                         <input type="file" accept=".kml,.geojson" className="hidden" onChange={handleFileUpload} />
                                     </label>
@@ -923,14 +923,14 @@ const ProjectDetails: React.FC = () => {
                                     </button>
 
                                     {generatingGrids && (
-                                        <div className="space-y-2 pt-1 border-t border-gray-100 mt-1">
-                                            <div className="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
+                                        <div className="space-y-2 pt-1 border-t border-white/10 mt-1">
+                                            <div className="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
                                                 <div
                                                     className="bg-indigo-600 h-full transition-all duration-300"
                                                     style={{ width: `${generationProgress}%` }}
                                                 />
                                             </div>
-                                            <p className="text-[10px] text-gray-500 font-medium animate-pulse text-center">{generationMessage}</p>
+                                            <p className="text-[10px] text-slate-400 font-medium animate-pulse text-center">{generationMessage}</p>
                                         </div>
                                     )}
                                 </div>
@@ -940,10 +940,10 @@ const ProjectDetails: React.FC = () => {
 
                     {activeTab === 'table' && (
                         <div className="max-w-4xl mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-300">
-                            <div className="flex justify-between items-center bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
+                            <div className="flex justify-between items-center glass-panel border-white/5 p-6 rounded-3xl shadow-[0_0_15px_rgba(0,0,0,0.5)] border border-white/10">
                                 <div>
-                                    <h3 className="text-xl font-bold text-gray-900">Proje Tablosu</h3>
-                                    <p className="text-sm text-gray-500">Master veri yapısını tanımlayın.</p>
+                                    <h3 className="text-xl font-bold text-white">Proje Tablosu</h3>
+                                    <p className="text-sm text-slate-400">Master veri yapısını tanımlayın.</p>
                                 </div>
                                 <button
                                     onClick={() => {
@@ -951,7 +951,7 @@ const ProjectDetails: React.FC = () => {
                                         setOptionsText('');
                                         setIsColumnModalOpen(true);
                                     }}
-                                    className="flex items-center gap-2 bg-primary-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-primary-700 transition-all shadow-lg"
+                                    className="flex items-center gap-2 bg-cyan-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-cyan-500 transition-all shadow-lg"
                                 >
                                     <Plus className="h-5 w-5" /> Kolon Ekle
                                 </button>
@@ -959,15 +959,15 @@ const ProjectDetails: React.FC = () => {
 
                             <div className="grid grid-cols-1 gap-3">
                                 {columns.map(col => (
-                                    <div key={col.id} className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between group hover:border-primary-100 transition-all">
+                                    <div key={col.id} className="glass-panel border-white/5 p-5 rounded-2xl shadow-[0_0_15px_rgba(0,0,0,0.5)] border border-white/10 flex items-center justify-between group hover:border-primary-100 transition-all">
                                         <div className="flex items-center gap-4">
-                                            <div className="h-10 w-10 bg-gray-50 rounded-xl flex items-center justify-center text-gray-400">
+                                            <div className="h-10 w-10 bg-slate-900/50 text-slate-200 rounded-xl flex items-center justify-center text-slate-500">
                                                 <Table2 className="h-5 w-5" />
                                             </div>
                                             <div>
-                                                <h4 className="font-bold text-gray-900">{col.label}</h4>
+                                                <h4 className="font-bold text-white">{col.label}</h4>
                                                 <div className="flex gap-2 text-[10px] font-bold uppercase tracking-wider">
-                                                    <span className="text-primary-600 px-2 py-0.5 bg-primary-50 rounded-full">{col.type}</span>
+                                                    <span className="text-cyan-400 px-2 py-0.5 bg-cyan-500/10 rounded-full">{col.type}</span>
                                                     {col.is_required && <span className="text-red-600 px-2 py-0.5 bg-red-50 rounded-full">Zorunlu</span>}
                                                 </div>
                                             </div>
@@ -977,8 +977,8 @@ const ProjectDetails: React.FC = () => {
                                                 setEditingColumn(col);
                                                 setOptionsText(col.options?.map((o: any) => o.value === o.label ? o.value : `${o.value},${o.label}`).join('\n') || '');
                                                 setIsColumnModalOpen(true);
-                                            }} className="p-2 text-gray-400 hover:text-primary-600 rounded-lg"><Settings className="h-4 w-4" /></button>
-                                            <button onClick={() => handleDeleteColumn(col.id)} className="p-2 text-gray-400 hover:text-red-500 rounded-lg"><Trash2 className="h-4 w-4" /></button>
+                                            }} className="p-2 text-slate-500 hover:text-cyan-400 rounded-lg"><Settings className="h-4 w-4" /></button>
+                                            <button onClick={() => handleDeleteColumn(col.id)} className="p-2 text-slate-500 hover:text-red-500 rounded-lg"><Trash2 className="h-4 w-4" /></button>
                                         </div>
                                     </div>
                                 ))}
@@ -989,10 +989,10 @@ const ProjectDetails: React.FC = () => {
                     {activeTab === 'forms' && (
                         <div className="max-w-4xl mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-300">
                             <div className="flex justify-between items-center mb-6">
-                                <h3 className="text-xl font-bold text-gray-900">Stakeholder Formları</h3>
+                                <h3 className="text-xl font-bold text-white">Stakeholder Formları</h3>
                                 <button
                                     onClick={() => { setEditingForm({ name: '', selected_columns: [] }); setIsFormModalOpen(true); }}
-                                    className="flex items-center gap-2 bg-primary-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-primary-700 transition-all shadow-lg"
+                                    className="flex items-center gap-2 bg-cyan-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-cyan-500 transition-all shadow-lg"
                                 >
                                     <Plus className="h-5 w-5" /> Yeni Form
                                 </button>
@@ -1000,16 +1000,16 @@ const ProjectDetails: React.FC = () => {
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 {stakeholderForms.map(form => (
-                                    <div key={form.id} className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 hover:border-primary-200 transition-all group relative">
+                                    <div key={form.id} className="glass-panel border-white/5 p-6 rounded-3xl shadow-[0_0_15px_rgba(0,0,0,0.5)] border border-white/10 hover:border-primary-200 transition-all group relative">
                                         <div className="mb-4">
-                                            <div className="h-10 w-10 bg-primary-50 rounded-xl flex items-center justify-center text-primary-600 mb-4">
+                                            <div className="h-10 w-10 bg-cyan-500/10 rounded-xl flex items-center justify-center text-cyan-400 mb-4">
                                                 <ClipboardList className="h-5 w-5" />
                                             </div>
-                                            <h4 className="text-lg font-bold text-gray-900">{form.name}</h4>
-                                            <p className="text-xs text-gray-400 mt-1">{form.selected_columns.length} Alan Seçili</p>
+                                            <h4 className="text-lg font-bold text-white">{form.name}</h4>
+                                            <p className="text-xs text-slate-500 mt-1">{form.selected_columns.length} Alan Seçili</p>
                                         </div>
                                         <div className="flex justify-between items-center mt-6 pt-4 border-t border-gray-50">
-                                            <button onClick={() => { setEditingForm(form); setIsFormModalOpen(true); }} className="text-xs font-bold text-primary-600">Düzenle</button>
+                                            <button onClick={() => { setEditingForm(form); setIsFormModalOpen(true); }} className="text-xs font-bold text-cyan-400">Düzenle</button>
                                             <Trash2 onClick={async (e) => {
                                                 e.stopPropagation();
                                                 if (confirm('Silmek istediğinize emin misiniz?')) {
@@ -1030,10 +1030,10 @@ const ProjectDetails: React.FC = () => {
 
                     {activeTab === 'stakeholders' && (
                         <div className="max-w-4xl mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-300">
-                            <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 flex justify-between items-center">
+                            <div className="glass-panel border-white/5 p-6 rounded-3xl shadow-[0_0_15px_rgba(0,0,0,0.5)] border border-white/10 flex justify-between items-center">
                                 <div>
-                                    <h3 className="text-xl font-bold text-gray-900">Paydaş Atamaları</h3>
-                                    <p className="text-sm text-gray-500">Kullanıcılara hangi formu dolduracaklarını atayın.</p>
+                                    <h3 className="text-xl font-bold text-white">Paydaş Atamaları</h3>
+                                    <p className="text-sm text-slate-400">Kullanıcılara hangi formu dolduracaklarını atayın.</p>
                                 </div>
                             </div>
 
@@ -1043,14 +1043,14 @@ const ProjectDetails: React.FC = () => {
                                     const assignedFormId = assignment?.form_id;
 
                                     return (
-                                        <div key={user.id} className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between group hover:border-primary-100 transition-all">
+                                        <div key={user.id} className="glass-panel border-white/5 p-6 rounded-2xl shadow-[0_0_15px_rgba(0,0,0,0.5)] border border-white/10 flex items-center justify-between group hover:border-primary-100 transition-all">
                                             <div className="flex items-center gap-4">
-                                                <div className="h-12 w-12 bg-gray-50 rounded-full flex items-center justify-center text-gray-400 border border-gray-100">
+                                                <div className="h-12 w-12 bg-slate-900/50 text-slate-200 rounded-full flex items-center justify-center text-slate-500 border border-white/10">
                                                     <UserCheck className="h-6 w-6" />
                                                 </div>
                                                 <div>
-                                                    <h4 className="font-bold text-gray-900">{user.first_name || user.username} {user.last_name || ''}</h4>
-                                                    <p className="text-xs text-gray-400">{user.email || user.username}</p>
+                                                    <h4 className="font-bold text-white">{user.first_name || user.username} {user.last_name || ''}</h4>
+                                                    <p className="text-xs text-slate-500">{user.email || user.username}</p>
                                                 </div>
                                             </div>
 
@@ -1059,7 +1059,7 @@ const ProjectDetails: React.FC = () => {
                                                     <div className="text-green-600" title="Atandı"><CheckCircle2 className="h-5 w-5" /></div>
                                                 )}
                                                 <select
-                                                    className="bg-gray-50 border border-gray-100 px-4 py-2 rounded-xl text-xs font-bold focus:outline-none focus:ring-2 focus:ring-primary-500"
+                                                    className="bg-slate-900/50 text-slate-200 border border-white/10 px-4 py-2 rounded-xl text-xs font-bold focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
                                                     value={assignedFormId || ''}
                                                     onChange={(e) => handleAssignForm(user.id, e.target.value)}
                                                 >
@@ -1077,23 +1077,23 @@ const ProjectDetails: React.FC = () => {
                     )}
 
                     {activeTab === 'data' && (
-                        <div className="flex-1 flex flex-col min-h-0 bg-white rounded-3xl overflow-hidden border border-gray-100 shadow-sm animate-in fade-in duration-300">
+                        <div className="flex-1 flex flex-col min-h-0 glass-panel border-white/5 rounded-3xl overflow-hidden border border-white/10 shadow-[0_0_15px_rgba(0,0,0,0.5)] animate-in fade-in duration-300">
                             {/* Toolbar */}
-                            <div className="p-4 border-b border-gray-100 flex flex-wrap items-center justify-between gap-4 bg-gray-50/50">
+                            <div className="p-4 border-b border-white/10 flex flex-wrap items-center justify-between gap-4 bg-slate-950/50 text-slate-200">
                                 <div className="flex items-center gap-4 flex-1 min-w-[300px]">
                                     <div className="relative flex-1">
-                                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
                                         <input
                                             type="text"
                                             placeholder="Verilerde ara (Hücre, Kullanıcı, İçerik)..."
                                             value={searchTerm}
                                             onChange={(e) => setSearchTerm(e.target.value)}
-                                            className="w-full pl-10 pr-4 py-2 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all font-medium"
+                                            className="w-full pl-10 pr-4 py-2 glass-panel border-white/5 border border-white/10 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/50 transition-all font-medium"
                                         />
                                         {searchTerm && (
                                             <button
                                                 onClick={() => setSearchTerm('')}
-                                                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                                                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300"
                                             >
                                                 <X className="h-4 w-4" />
                                             </button>
@@ -1101,14 +1101,14 @@ const ProjectDetails: React.FC = () => {
                                     </div>
                                     <button
                                         onClick={exportToCSV}
-                                        className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-xl text-sm font-bold text-gray-600 hover:bg-gray-50 hover:border-gray-300 transition-all shadow-sm"
+                                        className="flex items-center gap-2 px-4 py-2 glass-panel border-white/5 border border-white/10 rounded-xl text-sm font-bold text-slate-300 hover:bg-slate-900/50 hover:text-slate-200 text-slate-300 hover:border-white/20 transition-all shadow-[0_0_15px_rgba(0,0,0,0.5)]"
                                     >
                                         <Download className="h-4 w-4" />
                                         CSV İndir
                                     </button>
                                     <button
                                         onClick={handleExportGPKG}
-                                        className="flex items-center gap-2 px-4 py-2 bg-indigo-50 border border-indigo-100 rounded-xl text-sm font-bold text-indigo-600 hover:bg-indigo-100 transition-all shadow-sm"
+                                        className="flex items-center gap-2 px-4 py-2 bg-indigo-50 border border-indigo-100 rounded-xl text-sm font-bold text-indigo-600 hover:bg-indigo-100 transition-all shadow-[0_0_15px_rgba(0,0,0,0.5)]"
                                         title="QGIS uyumlu GeoPackage formatında dışa aktar"
                                     >
                                         <MapPin className="h-4 w-4" />
@@ -1118,7 +1118,7 @@ const ProjectDetails: React.FC = () => {
 
                                 {selectedResponseIds.size > 0 && (
                                     <div className="flex items-center gap-3 animate-in slide-in-from-right-4">
-                                        <span className="text-xs font-bold text-primary-600 bg-primary-50 px-3 py-1.5 rounded-lg border border-primary-100">
+                                        <span className="text-xs font-bold text-cyan-400 bg-cyan-500/10 px-3 py-1.5 rounded-lg border border-primary-100">
                                             {selectedResponseIds.size} Kayıt Seçildi
                                         </span>
                                         <button
@@ -1134,9 +1134,9 @@ const ProjectDetails: React.FC = () => {
                             </div>
 
                             {/* Top: Records Table */}
-                            <div className="flex-1 overflow-auto border-b border-gray-100 min-h-[300px]">
+                            <div className="flex-1 overflow-auto border-b border-white/10 min-h-[300px]">
                                 <table className="w-full text-left border-collapse">
-                                    <thead className="sticky top-0 bg-white z-10 border-b border-gray-100 shadow-sm">
+                                    <thead className="sticky top-0 glass-panel border-white/5 z-10 border-b border-white/10 shadow-[0_0_15px_rgba(0,0,0,0.5)]">
                                         <tr>
                                             <th className="px-4 py-4 w-12 text-center">
                                                 <input
@@ -1149,21 +1149,21 @@ const ProjectDetails: React.FC = () => {
                                                             setSelectedResponseIds(new Set());
                                                         }
                                                     }}
-                                                    className="w-4 h-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                                                    className="w-4 h-4 rounded border-white/20 text-cyan-400 focus:ring-cyan-500/50"
                                                 />
                                             </th>
-                                            <th className="px-4 py-4 text-[10px] font-black uppercase text-gray-400">Kullanıcı</th>
-                                            <th className="px-4 py-4 text-[10px] font-black uppercase text-gray-400">Hücre ID</th>
-                                            <th className="px-4 py-4 text-[10px] font-black uppercase text-gray-400">Tarih</th>
-                                            <th className="px-4 py-4 text-[10px] font-black uppercase text-gray-400">İçerik Özeti</th>
-                                            <th className="px-4 py-4 text-[10px] font-black uppercase text-gray-400 text-right">İşlemler</th>
+                                            <th className="px-4 py-4 text-[10px] font-black uppercase text-slate-500">Kullanıcı</th>
+                                            <th className="px-4 py-4 text-[10px] font-black uppercase text-slate-500">Hücre ID</th>
+                                            <th className="px-4 py-4 text-[10px] font-black uppercase text-slate-500">Tarih</th>
+                                            <th className="px-4 py-4 text-[10px] font-black uppercase text-slate-500">İçerik Özeti</th>
+                                            <th className="px-4 py-4 text-[10px] font-black uppercase text-slate-500 text-right">İşlemler</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-gray-50">
                                         {filteredResponses.map((resp: any) => (
                                             <tr
                                                 key={resp.id}
-                                                className={`group transition-colors ${selectedResponseIds.has(resp.id) ? 'bg-primary-50' : 'hover:bg-gray-50'}`}
+                                                className={`group transition-colors ${selectedResponseIds.has(resp.id) ? 'bg-cyan-500/10' : 'hover:bg-slate-900/50 hover:text-slate-200 text-slate-300'}`}
                                             >
                                                 <td className="px-4 py-4 text-center">
                                                     <input
@@ -1179,29 +1179,29 @@ const ProjectDetails: React.FC = () => {
                                                             }
                                                             setSelectedResponseIds(newIds);
                                                         }}
-                                                        className="w-4 h-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                                                        className="w-4 h-4 rounded border-white/20 text-cyan-400 focus:ring-cyan-500/50"
                                                     />
                                                 </td>
                                                 <td className="px-4 py-4" onClick={() => setSelectedResponse(resp)}>
                                                     <div className="flex flex-col">
-                                                        <span className="text-sm font-bold text-gray-900">User_{resp.user_id}</span>
+                                                        <span className="text-sm font-bold text-white">User_{resp.user_id}</span>
                                                     </div>
                                                 </td>
                                                 <td className="px-4 py-4" onClick={() => setSelectedResponse(resp)}>
-                                                    <span className="text-xs font-mono font-bold text-primary-600 bg-primary-50 px-2 py-1 rounded">
+                                                    <span className="text-xs font-mono font-bold text-cyan-400 bg-cyan-500/10 px-2 py-1 rounded">
                                                         {resp.h3_index || 'Genel'}
                                                     </span>
                                                 </td>
-                                                <td className="px-4 py-4 text-xs text-gray-500" onClick={() => setSelectedResponse(resp)}>
+                                                <td className="px-4 py-4 text-xs text-slate-400" onClick={() => setSelectedResponse(resp)}>
                                                     <div className="flex items-center gap-1.5 font-medium">
-                                                        <Calendar className="h-3.5 w-3.5 text-gray-400" />
+                                                        <Calendar className="h-3.5 w-3.5 text-slate-500" />
                                                         {new Date(resp.created_at).toLocaleDateString()}
                                                         <span className="text-gray-300 mx-1">|</span>
                                                         {new Date(resp.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                                     </div>
                                                 </td>
                                                 <td className="px-4 py-4" onClick={() => setSelectedResponse(resp)}>
-                                                    <p className="text-xs text-gray-500 truncate max-w-xs font-medium">
+                                                    <p className="text-xs text-slate-400 truncate max-w-xs font-medium">
                                                         {Object.entries(resp.response_data || {})
                                                             .filter(([_, v]) => typeof v !== 'object')
                                                             .map(([k, v]) => `${k}: ${v}`)
@@ -1216,7 +1216,7 @@ const ProjectDetails: React.FC = () => {
                                                                 setEditingResponse({ ...resp });
                                                                 setIsEditingModalOpen(true);
                                                             }}
-                                                            className="p-2 text-gray-400 hover:text-primary-600 hover:bg-primary-50 rounded-xl transition-all"
+                                                            className="p-2 text-slate-500 hover:text-cyan-400 hover:bg-cyan-500/10 rounded-xl transition-all"
                                                             title="Düzenle"
                                                         >
                                                             <Edit className="h-4 w-4" />
@@ -1226,7 +1226,7 @@ const ProjectDetails: React.FC = () => {
                                                                 e.stopPropagation();
                                                                 handleDeleteResponse(resp.id);
                                                             }}
-                                                            className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all"
+                                                            className="p-2 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all"
                                                             title="Sil"
                                                         >
                                                             <Trash2 className="h-4 w-4" />
@@ -1238,11 +1238,11 @@ const ProjectDetails: React.FC = () => {
                                         {filteredResponses.length === 0 && (
                                             <tr>
                                                 <td colSpan={6} className="px-6 py-20 text-center">
-                                                    <div className="h-16 w-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4 text-gray-200">
+                                                    <div className="h-16 w-16 bg-slate-900/50 text-slate-200 rounded-full flex items-center justify-center mx-auto mb-4 text-gray-200">
                                                         <Search className="h-8 w-8" />
                                                     </div>
-                                                    <h4 className="font-bold text-gray-900">Sonuç Bulunamadı</h4>
-                                                    <p className="text-sm text-gray-500">Arama kriterlerinize uygun kayıt bulunmuyor.</p>
+                                                    <h4 className="font-bold text-white">Sonuç Bulunamadı</h4>
+                                                    <p className="text-sm text-slate-400">Arama kriterlerinize uygun kayıt bulunmuyor.</p>
                                                 </td>
                                             </tr>
                                         )}
@@ -1253,7 +1253,7 @@ const ProjectDetails: React.FC = () => {
                             {/* Bottom: Split View (Map + Details) */}
                             <div className="h-1/2 flex border-t-4 border-gray-50">
                                 {/* Bottom Left: Map (3/4) */}
-                                <div className="flex-[3] relative bg-gray-100">
+                                <div className="flex-[3] relative bg-slate-800">
                                     <MapContainer
                                         projectId={id}
                                         areaId={selectedAreaId || undefined}
@@ -1291,19 +1291,19 @@ const ProjectDetails: React.FC = () => {
                                         })()}
                                     />
                                     {selectedResponseIds.size === 0 && (
-                                        <div className="absolute inset-0 bg-gray-100/50 backdrop-blur-[1px] flex items-center justify-center z-10">
-                                            <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Görselleştirmek için checkbox ile kayıt seçin</p>
+                                        <div className="absolute inset-0 bg-slate-800/50 backdrop-blur-[1px] flex items-center justify-center z-10">
+                                            <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">Görselleştirmek için checkbox ile kayıt seçin</p>
                                         </div>
                                     )}
                                     {selectedResponseIds.size > 0 && (
-                                        <div className="absolute top-3 left-3 bg-primary-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold z-10">
+                                        <div className="absolute top-3 left-3 bg-cyan-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold z-10">
                                             {selectedResponseIds.size} kayıt seçili
                                         </div>
                                     )}
 
                                     <button
                                         onClick={() => setFitTrigger(prev => prev + 1)}
-                                        className="absolute top-3 right-3 bg-white/90 backdrop-blur-md px-3 py-2 rounded-xl text-primary-600 font-bold text-xs shadow-lg border border-primary-50 hover:bg-white transition-all flex items-center gap-2 z-10"
+                                        className="absolute top-3 right-3 glass-panel border-white/5/90 backdrop-blur-md px-3 py-2 rounded-xl text-cyan-400 font-bold text-xs shadow-lg border border-primary-50 hover:bg-white/5 transition-all flex items-center gap-2 z-10"
                                         title="Seçili verilere odakla"
                                     >
                                         <MapPin className="h-4 w-4" />
@@ -1312,14 +1312,14 @@ const ProjectDetails: React.FC = () => {
                                 </div>
 
                                 {/* Bottom Right: Details (1/4) */}
-                                <div className="flex-1 bg-white border-l border-gray-100 flex flex-col min-h-0 overflow-y-auto p-6 scrollbar-hide">
-                                    <h4 className="text-xs font-black text-gray-400 uppercase tracking-widest mb-6 border-b border-gray-50 pb-2">Kayıt Detayları</h4>
+                                <div className="flex-1 glass-panel border-white/5 border-l border-white/10 flex flex-col min-h-0 overflow-y-auto p-6 scrollbar-hide">
+                                    <h4 className="text-xs font-black text-slate-500 uppercase tracking-widest mb-6 border-b border-gray-50 pb-2">Kayıt Detayları</h4>
                                     {selectedResponse ? (
                                         <div className="space-y-4">
                                             {Object.entries(selectedResponse.response_data || {}).map(([key, value]: [string, any]) => (
                                                 <div key={key} className="space-y-1">
-                                                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-tighter">{key}</label>
-                                                    <div className="text-sm font-semibold text-gray-800 bg-gray-50 p-3 rounded-xl border border-gray-100">
+                                                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-tighter">{key}</label>
+                                                    <div className="text-sm font-semibold text-slate-200 bg-slate-900/50 text-slate-200 p-3 rounded-xl border border-white/10">
                                                         {typeof value === 'object' ? (value.type ? `Geometri: ${value.type}` : JSON.stringify(value)) : String(value)}
                                                     </div>
                                                 </div>
@@ -1327,7 +1327,7 @@ const ProjectDetails: React.FC = () => {
                                         </div>
                                     ) : (
                                         <div className="flex-1 flex items-center justify-center text-center px-4">
-                                            <p className="text-xs text-gray-400 italic">Yukarıdaki tablodan bir satıra tıklayarak detayları görüntüleyebilirsiniz.</p>
+                                            <p className="text-xs text-slate-500 italic">Yukarıdaki tablodan bir satıra tıklayarak detayları görüntüleyebilirsiniz.</p>
                                         </div>
                                     )}
                                 </div>
@@ -1340,21 +1340,21 @@ const ProjectDetails: React.FC = () => {
                 {
                     isColumnModalOpen && (
                         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-sm animate-in fade-in">
-                            <div className="bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden">
-                                <div className="p-6 border-b flex justify-between items-center bg-gray-50">
+                            <div className="glass-panel border-white/5 w-full max-w-md rounded-3xl shadow-2xl overflow-hidden">
+                                <div className="p-6 border-b flex justify-between items-center bg-slate-900/50 text-slate-200">
                                     <h3 className="font-bold flex items-center gap-2">
-                                        <Database className="h-4 w-4 text-primary-600" />
+                                        <Database className="h-4 w-4 text-cyan-400" />
                                         Kolon Tanımla
                                     </h3>
-                                    <button onClick={() => setIsColumnModalOpen(false)} className="text-gray-400 hover:text-gray-600 text-2xl font-bold">&times;</button>
+                                    <button onClick={() => setIsColumnModalOpen(false)} className="text-slate-500 hover:text-slate-300 text-2xl font-bold">&times;</button>
                                 </div>
                                 <form onSubmit={handleSaveColumn} className="p-6 space-y-4 max-h-[80vh] overflow-y-auto custom-scrollbar">
                                     <div className="space-y-1">
-                                        <label className="text-[10px] font-bold text-gray-400 uppercase ml-1">Görünür Başlık</label>
-                                        <input required type="text" placeholder="Örn: Yaş, Şehir, Notlar" value={editingColumn.label} onChange={(e) => setEditingColumn({ ...editingColumn, label: e.target.value })} className="w-full bg-gray-50 p-3 rounded-xl border border-gray-100 focus:ring-2 focus:ring-primary-500 outline-none font-medium placeholder:text-gray-300 transition-all" />
+                                        <label className="text-[10px] font-bold text-slate-500 uppercase ml-1">Görünür Başlık</label>
+                                        <input required type="text" placeholder="Örn: Yaş, Şehir, Notlar" value={editingColumn.label} onChange={(e) => setEditingColumn({ ...editingColumn, label: e.target.value })} className="w-full bg-slate-900/50 text-slate-200 p-3 rounded-xl border border-white/10 focus:ring-2 focus:ring-cyan-500/50 outline-none font-medium placeholder:text-gray-300 transition-all" />
                                     </div>
                                     <div className="space-y-1">
-                                        <label className="text-[10px] font-bold text-gray-400 uppercase ml-1">Veri Tipi</label>
+                                        <label className="text-[10px] font-bold text-slate-500 uppercase ml-1">Veri Tipi</label>
                                         <div className="grid grid-cols-2 gap-2">
                                             {[
                                                 { id: 'text', label: 'Metin', icon: Type },
@@ -1369,7 +1369,7 @@ const ProjectDetails: React.FC = () => {
                                                     key={t.id}
                                                     type="button"
                                                     onClick={() => setEditingColumn({ ...editingColumn, type: t.id, config: t.id === 'geometry' ? { geom_type: 'Point' } : (t.id === 'file' ? { allowed_types: ['pdf', 'jpg'] } : {}) })}
-                                                    className={`flex items-center gap-2 p-3 rounded-xl border transition-all text-xs font-bold ${editingColumn.type === t.id ? 'bg-primary-50 border-primary-200 text-primary-600 shadow-sm' : 'bg-white border-gray-100 text-gray-500 hover:border-gray-200'}`}
+                                                    className={`flex items-center gap-2 p-3 rounded-xl border transition-all text-xs font-bold ${editingColumn.type === t.id ? 'bg-cyan-500/10 border-primary-200 text-cyan-400 shadow-[0_0_15px_rgba(0,0,0,0.5)]' : 'glass-panel border-white/5 border-white/10 text-slate-400 hover:border-white/10'}`}
                                                 >
                                                     <t.icon className="h-4 w-4" />
                                                     {t.label}
@@ -1380,11 +1380,11 @@ const ProjectDetails: React.FC = () => {
 
                                     {editingColumn.type === 'geometry' && (
                                         <div className="space-y-1 animate-in slide-in-from-top-2 duration-200">
-                                            <label className="text-[10px] font-bold text-gray-400 uppercase ml-1">Geometri Tipi</label>
+                                            <label className="text-[10px] font-bold text-slate-500 uppercase ml-1">Geometri Tipi</label>
                                             <select
                                                 value={editingColumn.config?.geom_type || 'Point'}
                                                 onChange={(e) => setEditingColumn({ ...editingColumn, config: { ...editingColumn.config, geom_type: e.target.value } })}
-                                                className="w-full bg-gray-50 p-3 rounded-xl border border-gray-100 focus:ring-2 focus:ring-primary-500 outline-none text-xs font-bold"
+                                                className="w-full bg-slate-900/50 text-slate-200 p-3 rounded-xl border border-white/10 focus:ring-2 focus:ring-cyan-500/50 outline-none text-xs font-bold"
                                             >
                                                 <option value="Point">Nokta (Point)</option>
                                                 <option value="LineString">Çizgi (LineString)</option>
@@ -1397,10 +1397,10 @@ const ProjectDetails: React.FC = () => {
                                     )}
 
                                     {editingColumn.type === 'select' && (
-                                        <div className="space-y-3 animate-in slide-in-from-top-2 duration-200 p-4 bg-primary-50/30 rounded-2xl border border-primary-100">
+                                        <div className="space-y-3 animate-in slide-in-from-top-2 duration-200 p-4 bg-cyan-500/10/30 rounded-2xl border border-primary-100">
                                             <div className="flex justify-between items-center">
-                                                <label className="text-[10px] font-bold text-primary-600 uppercase">Seçenek Listesi</label>
-                                                <label className="flex items-center gap-1.5 px-3 py-1 bg-white border border-primary-100 text-primary-600 rounded-lg text-[10px] font-bold cursor-pointer hover:bg-primary-50 transition-all shadow-sm">
+                                                <label className="text-[10px] font-bold text-cyan-400 uppercase">Seçenek Listesi</label>
+                                                <label className="flex items-center gap-1.5 px-3 py-1 glass-panel border-white/5 border border-primary-100 text-cyan-400 rounded-lg text-[10px] font-bold cursor-pointer hover:bg-cyan-500/10 transition-all shadow-[0_0_15px_rgba(0,0,0,0.5)]">
                                                     <FileUp className="h-3 w-3" /> CSV Yükle
                                                     <input
                                                         type="file"
@@ -1433,7 +1433,7 @@ const ProjectDetails: React.FC = () => {
                                             <textarea
                                                 rows={3}
                                                 placeholder="Her satıra bir seçenek veya 'değer,etiket' yazın..."
-                                                className="w-full bg-white p-3 rounded-xl border border-primary-100 focus:ring-2 focus:ring-primary-500 outline-none text-xs"
+                                                className="w-full glass-panel border-white/5 p-3 rounded-xl border border-primary-100 focus:ring-2 focus:ring-cyan-500/50 outline-none text-xs"
                                                 onChange={(e) => {
                                                     const text = e.target.value;
                                                     setOptionsText(text);
@@ -1455,9 +1455,9 @@ const ProjectDetails: React.FC = () => {
                                                         ...editingColumn,
                                                         config: { ...editingColumn.config, allow_other: e.target.checked }
                                                     })}
-                                                    className="w-4 h-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                                                    className="w-4 h-4 text-cyan-400 focus:ring-cyan-500/50 border-white/20 rounded"
                                                 />
-                                                <label htmlFor="allow_other" className="text-xs font-bold text-primary-700 cursor-pointer">
+                                                <label htmlFor="allow_other" className="text-xs font-bold text-cyan-300 cursor-pointer">
                                                     "Diğer" seçeneğine ve manuel girişe izin ver
                                                 </label>
                                             </div>
@@ -1466,12 +1466,12 @@ const ProjectDetails: React.FC = () => {
                                     )}
 
                                     <div className="flex items-center justify-between p-1">
-                                        <label className="flex items-center gap-2 font-bold text-xs text-gray-600 cursor-pointer">
-                                            <input type="checkbox" checked={editingColumn.is_required} onChange={(e) => setEditingColumn({ ...editingColumn, is_required: e.target.checked })} className="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500" />
+                                        <label className="flex items-center gap-2 font-bold text-xs text-slate-300 cursor-pointer">
+                                            <input type="checkbox" checked={editingColumn.is_required} onChange={(e) => setEditingColumn({ ...editingColumn, is_required: e.target.checked })} className="h-4 w-4 rounded border-white/20 text-cyan-400 focus:ring-cyan-500/50" />
                                             Bu alan zorunlu olsun
                                         </label>
                                     </div>
-                                    <button type="submit" className="w-full bg-primary-600 text-white p-4 rounded-2xl font-bold shadow-lg shadow-primary-200 hover:bg-primary-700 active:scale-[0.98] transition-all mt-4 border-b-4 border-primary-800">
+                                    <button type="submit" className="w-full bg-cyan-600 text-white p-4 rounded-2xl font-bold shadow-[0_0_15px_rgba(6,182,212,0.4)] hover:bg-cyan-500 active:scale-[0.98] transition-all mt-4 border-b-4 border-primary-800">
                                         {editingColumn.id ? 'Değişiklikleri Kaydet' : 'Kolonu Oluştur'}
                                     </button>
                                 </form>
@@ -1483,35 +1483,35 @@ const ProjectDetails: React.FC = () => {
                 {
                     isFormModalOpen && (
                         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-sm animate-in fade-in">
-                            <div className="bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden">
-                                <div className="p-6 border-b flex justify-between items-center bg-gray-50">
+                            <div className="glass-panel border-white/5 w-full max-w-md rounded-3xl shadow-2xl overflow-hidden">
+                                <div className="p-6 border-b flex justify-between items-center bg-slate-900/50 text-slate-200">
                                     <h3 className="font-bold">Form Tasarla</h3>
                                     <button onClick={() => setIsFormModalOpen(false)} className="text-2xl font-bold">&times;</button>
                                 </div>
                                 <form onSubmit={handleSaveForm} className="p-6 space-y-4">
                                     <div className="space-y-1">
-                                        <label className="text-[10px] font-bold text-gray-400 uppercase ml-1">Form Adı</label>
-                                        <input required type="text" placeholder="Örn: Temel Bilgi Formu" value={editingForm.name} onChange={(e) => setEditingForm({ ...editingForm, name: e.target.value })} className="w-full bg-gray-50 p-3 rounded-xl border border-gray-100 focus:ring-2 focus:ring-primary-500 outline-none" />
+                                        <label className="text-[10px] font-bold text-slate-500 uppercase ml-1">Form Adı</label>
+                                        <input required type="text" placeholder="Örn: Temel Bilgi Formu" value={editingForm.name} onChange={(e) => setEditingForm({ ...editingForm, name: e.target.value })} className="w-full bg-slate-900/50 text-slate-200 p-3 rounded-xl border border-white/10 focus:ring-2 focus:ring-cyan-500/50 outline-none" />
                                     </div>
                                     <div className="space-y-2">
-                                        <label className="text-[10px] font-bold text-gray-400 uppercase ml-1">Görünecek Alanlar</label>
-                                        <div className="max-h-48 overflow-y-auto space-y-2 bg-gray-50 p-3 rounded-xl border border-gray-100">
+                                        <label className="text-[10px] font-bold text-slate-500 uppercase ml-1">Görünecek Alanlar</label>
+                                        <div className="max-h-48 overflow-y-auto space-y-2 bg-slate-900/50 text-slate-200 p-3 rounded-xl border border-white/10">
                                             {columns.length === 0 ? (
-                                                <p className="text-xs text-gray-400 text-center py-4">Önce Tablo sekmesinden kolon ekleyin.</p>
+                                                <p className="text-xs text-slate-500 text-center py-4">Önce Tablo sekmesinden kolon ekleyin.</p>
                                             ) : (
                                                 columns.map(col => (
-                                                    <label key={col.id} className="flex items-center gap-3 p-2 bg-white rounded-lg border border-gray-50 hover:border-primary-100 cursor-pointer">
+                                                    <label key={col.id} className="flex items-center gap-3 p-2 glass-panel border-white/5 rounded-lg border border-gray-50 hover:border-primary-100 cursor-pointer">
                                                         <input type="checkbox" checked={editingForm.selected_columns?.includes(col.id)} onChange={(e) => {
                                                             const sel = editingForm.selected_columns || [];
                                                             setEditingForm({ ...editingForm, selected_columns: e.target.checked ? [...sel, col.id] : sel.filter((s: any) => s !== col.id) });
-                                                        }} className="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500" />
+                                                        }} className="h-4 w-4 rounded border-white/20 text-cyan-400 focus:ring-cyan-500/50" />
                                                         <span className="text-sm font-medium">{col.label}</span>
                                                     </label>
                                                 ))
                                             )}
                                         </div>
                                     </div>
-                                    <button type="submit" className="w-full bg-primary-600 text-white p-4 rounded-2xl font-bold shadow-lg shadow-primary-200 hover:bg-primary-700 transition-all mt-4">Kaydet</button>
+                                    <button type="submit" className="w-full bg-cyan-600 text-white p-4 rounded-2xl font-bold shadow-[0_0_15px_rgba(6,182,212,0.4)] hover:bg-cyan-500 transition-all mt-4">Kaydet</button>
                                 </form>
                             </div>
                         </div>
@@ -1523,7 +1523,7 @@ const ProjectDetails: React.FC = () => {
             {
                 showAreaDataWarning && (
                     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 animate-in fade-in duration-200">
-                        <div className="bg-white rounded-3xl shadow-2xl max-w-md w-full mx-4 overflow-hidden animate-in zoom-in-95 duration-200">
+                        <div className="glass-panel border-white/5 rounded-3xl shadow-2xl max-w-md w-full mx-4 overflow-hidden animate-in zoom-in-95 duration-200">
                             <div className="bg-gradient-to-r from-red-500 to-orange-500 p-6 text-white">
                                 <div className="flex items-center gap-3">
                                     <AlertTriangle className="h-8 w-8" />
@@ -1531,7 +1531,7 @@ const ProjectDetails: React.FC = () => {
                                 </div>
                             </div>
                             <div className="p-6 space-y-4">
-                                <p className="text-gray-700 text-sm leading-relaxed">
+                                <p className="text-slate-300 text-sm leading-relaxed">
                                     Bu proje için <span className="font-bold text-red-600">{areaDataCount} adet</span> grid bazlı veri girişi bulunmaktadır.
                                 </p>
                                 <div className="bg-red-50 border border-red-200 rounded-xl p-4">
@@ -1539,14 +1539,14 @@ const ProjectDetails: React.FC = () => {
                                         ⚠️ Gridleri yeniden üretirseniz bu veriler <strong>kalıcı olarak silinecektir</strong>!
                                     </p>
                                 </div>
-                                <p className="text-gray-500 text-xs">
+                                <p className="text-slate-400 text-xs">
                                     Devam etmeden önce verilerinizi yedeklemenizi öneririz.
                                 </p>
                             </div>
                             <div className="p-6 pt-0 flex gap-3">
                                 <button
                                     onClick={() => setShowAreaDataWarning(false)}
-                                    className="flex-1 bg-gray-100 text-gray-700 py-3 rounded-xl font-bold hover:bg-gray-200 transition-all"
+                                    className="flex-1 bg-slate-800 text-slate-300 py-3 rounded-xl font-bold hover:bg-slate-700 transition-all"
                                 >
                                     İptal
                                 </button>
@@ -1564,44 +1564,44 @@ const ProjectDetails: React.FC = () => {
             {/* Edit Response Modal */}
             {isEditingModalOpen && editingResponse && (
                 <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-sm animate-in fade-in">
-                    <div className="bg-white w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
-                        <div className="p-6 border-b flex justify-between items-center bg-gray-50 shrink-0">
+                    <div className="glass-panel border-white/5 w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+                        <div className="p-6 border-b flex justify-between items-center bg-slate-900/50 text-slate-200 shrink-0">
                             <div className="flex items-center gap-2">
-                                <div className="h-8 w-8 bg-primary-100 text-primary-600 rounded-lg flex items-center justify-center">
+                                <div className="h-8 w-8 bg-cyan-500/20 border border-cyan-500/30 text-cyan-400 rounded-lg flex items-center justify-center">
                                     <Edit className="h-4 w-4" />
                                 </div>
-                                <h3 className="font-bold text-gray-900">Kaydı Düzenle</h3>
+                                <h3 className="font-bold text-white">Kaydı Düzenle</h3>
                             </div>
-                            <button onClick={() => setIsEditingModalOpen(false)} className="text-gray-400 hover:text-gray-600 text-2xl font-bold p-2">&times;</button>
+                            <button onClick={() => setIsEditingModalOpen(false)} className="text-slate-500 hover:text-slate-300 text-2xl font-bold p-2">&times;</button>
                         </div>
 
                         <form onSubmit={handleUpdateResponse} className="flex-1 overflow-y-auto p-6 space-y-6 scrollbar-hide">
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-1">
-                                    <label className="text-[10px] font-bold text-gray-400 uppercase ml-1">Kullanıcı</label>
-                                    <div className="bg-gray-50 p-3 rounded-xl border border-gray-100 text-sm font-medium text-gray-500">
+                                    <label className="text-[10px] font-bold text-slate-500 uppercase ml-1">Kullanıcı</label>
+                                    <div className="bg-slate-900/50 text-slate-200 p-3 rounded-xl border border-white/10 text-sm font-medium text-slate-400">
                                         User_{editingResponse.user_id}
                                     </div>
                                 </div>
                                 <div className="space-y-1">
-                                    <label className="text-[10px] font-bold text-gray-400 uppercase ml-1">Hücre ID</label>
-                                    <div className="bg-gray-50 p-3 rounded-xl border border-gray-100 text-sm font-mono text-gray-500">
+                                    <label className="text-[10px] font-bold text-slate-500 uppercase ml-1">Hücre ID</label>
+                                    <div className="bg-slate-900/50 text-slate-200 p-3 rounded-xl border border-white/10 text-sm font-mono text-slate-400">
                                         {editingResponse.h3_index || '-'}
                                     </div>
                                 </div>
                             </div>
 
                             <div className="space-y-4">
-                                <div className="flex items-center justify-between border-b border-gray-100 pb-2">
-                                    <h4 className="text-xs font-black text-gray-400 uppercase tracking-widest">Veri İçeriği</h4>
+                                <div className="flex items-center justify-between border-b border-white/10 pb-2">
+                                    <h4 className="text-xs font-black text-slate-500 uppercase tracking-widest">Veri İçeriği</h4>
                                 </div>
 
                                 {Object.entries(editingResponse.response_data || {}).map(([key, value]: [string, any]) => (
                                     <div key={key} className="space-y-1">
-                                        <label className="text-[10px] font-bold text-gray-500 uppercase ml-1">{key}</label>
+                                        <label className="text-[10px] font-bold text-slate-400 uppercase ml-1">{key}</label>
                                         {typeof value === 'object' && value !== null ? (
                                             <textarea
-                                                className="w-full bg-gray-50 p-3 rounded-xl border border-gray-100 focus:ring-2 focus:ring-primary-500 outline-none text-xs font-mono"
+                                                className="w-full bg-slate-900/50 text-slate-200 p-3 rounded-xl border border-white/10 focus:ring-2 focus:ring-cyan-500/50 outline-none text-xs font-mono"
                                                 rows={4}
                                                 value={JSON.stringify(value, null, 2)}
                                                 onChange={(e) => {
@@ -1622,7 +1622,7 @@ const ProjectDetails: React.FC = () => {
                                         ) : (
                                             <input
                                                 type="text"
-                                                className="w-full bg-gray-50 p-3 rounded-xl border border-gray-100 focus:ring-2 focus:ring-primary-500 outline-none text-sm font-medium"
+                                                className="w-full bg-slate-900/50 text-slate-200 p-3 rounded-xl border border-white/10 focus:ring-2 focus:ring-cyan-500/50 outline-none text-sm font-medium"
                                                 value={String(value)}
                                                 onChange={(e) => {
                                                     setEditingResponse({
@@ -1640,17 +1640,17 @@ const ProjectDetails: React.FC = () => {
                             </div>
                         </form>
 
-                        <div className="p-6 border-t bg-gray-50 flex gap-3 shrink-0">
+                        <div className="p-6 border-t bg-slate-900/50 text-slate-200 flex gap-3 shrink-0">
                             <button
                                 type="button"
                                 onClick={() => setIsEditingModalOpen(false)}
-                                className="flex-1 px-4 py-3 bg-white border border-gray-200 text-gray-600 rounded-xl font-bold hover:bg-gray-100 transition-all"
+                                className="flex-1 px-4 py-3 glass-panel border-white/5 border border-white/10 text-slate-300 rounded-xl font-bold hover:bg-slate-800 transition-all"
                             >
                                 Vazgeç
                             </button>
                             <button
                                 onClick={handleUpdateResponse}
-                                className="flex-[2] px-4 py-3 bg-primary-600 text-white rounded-xl font-bold shadow-lg shadow-primary-200 hover:bg-primary-700 transition-all active:scale-95"
+                                className="flex-[2] px-4 py-3 bg-cyan-600 text-white rounded-xl font-bold shadow-[0_0_15px_rgba(6,182,212,0.4)] hover:bg-cyan-500 transition-all active:scale-95"
                             >
                                 Değişiklikleri Kaydet
                             </button>

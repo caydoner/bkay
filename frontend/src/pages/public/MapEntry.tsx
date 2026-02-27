@@ -249,37 +249,37 @@ const MapEntry: React.FC = () => {
         setFormData((prev: any) => ({ ...prev, [colName]: null }));
     };
 
-    if (loading) return <div className="h-screen w-full flex items-center justify-center font-bold text-primary-600 bg-gray-50"><Loader2 className="h-8 w-8 animate-spin" /> Yükleniyor...</div>;
+    if (loading) return <div className="h-screen w-full flex items-center justify-center font-bold text-cyan-400 bg-slate-900/50 text-slate-200"><Loader2 className="h-8 w-8 animate-spin" /> Yükleniyor...</div>;
 
     return (
-        <div className="flex flex-col h-screen overflow-hidden bg-gray-50">
+        <div className="flex flex-col h-screen overflow-hidden bg-slate-900/50 text-slate-200">
             {/* Map Header */}
-            <header className="bg-white/90 backdrop-blur-md border-b border-gray-100 p-4 flex justify-between items-center z-10 shadow-sm shrink-0">
+            <header className="glass-panel border-white/5/90 backdrop-blur-md border-b border-white/10 p-4 flex justify-between items-center z-10 shadow-[0_0_15px_rgba(0,0,0,0.5)] shrink-0">
                 <div className="flex items-center gap-3">
                     <button
                         onClick={() => navigate('/public')}
-                        className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                        className="p-2 hover:bg-slate-800 rounded-lg transition-colors"
                     >
-                        <ChevronLeft className="h-6 w-6 text-gray-600" />
+                        <ChevronLeft className="h-6 w-6 text-slate-300" />
                     </button>
                     <div>
-                        <h1 className="font-bold text-gray-900">Veri Toplama</h1>
-                        <p className="text-[10px] font-bold text-primary-600 uppercase tracking-widest">{formDetails?.name || 'Genel Form'}</p>
+                        <h1 className="font-bold text-white">Veri Toplama</h1>
+                        <p className="text-[10px] font-bold text-cyan-400 uppercase tracking-widest">{formDetails?.name || 'Genel Form'}</p>
                     </div>
                 </div>
 
                 {/* Status indicators */}
                 <div className="flex items-center gap-3">
                     {multiSelectMode && (
-                        <div className="bg-cyan-50 border border-cyan-200 px-4 py-2 rounded-xl flex items-center gap-3">
+                        <div className="bg-cyan-500/10 border border-cyan-500/20 px-4 py-2 rounded-xl flex items-center gap-3">
                             <Grid3x3 className="h-4 w-4 text-cyan-600" />
-                            <span className="text-xs font-bold text-cyan-800">
+                            <span className="text-xs font-bold text-cyan-300">
                                 Grid Seçimi: {selectedGridCells.length} hücre
                             </span>
                             <button
                                 onClick={confirmGridSelection}
                                 disabled={selectedGridCells.length === 0}
-                                className="text-[10px] font-black uppercase text-cyan-600 hover:text-cyan-800 disabled:opacity-50"
+                                className="text-[10px] font-black uppercase text-cyan-600 hover:text-cyan-300 disabled:opacity-50"
                             >
                                 ONAYLA
                             </button>
@@ -289,7 +289,7 @@ const MapEntry: React.FC = () => {
                                     setSelectedGridCells([]);
                                     setActiveGeomCol(null);
                                 }}
-                                className="text-[10px] font-black uppercase text-red-500 hover:text-red-700"
+                                className="text-[10px] font-black uppercase text-rose-400 hover:text-rose-300"
                             >
                                 İPTAL
                             </button>
@@ -297,13 +297,13 @@ const MapEntry: React.FC = () => {
                     )}
 
                     {drawMode && (
-                        <div className="bg-amber-50 border border-amber-200 px-4 py-2 rounded-xl flex items-center gap-3">
+                        <div className="bg-amber-500/10 border border-amber-500/20 px-4 py-2 rounded-xl flex items-center gap-3">
                             <MapPin className="h-4 w-4 text-amber-600 animate-pulse" />
-                            <span className="text-xs font-bold text-amber-800">Çizim: {activeDrawCol}</span>
+                            <span className="text-xs font-bold text-amber-300">Çizim: {activeDrawCol}</span>
                             <span className="text-[10px] text-amber-600">(Haritada çift tıklayarak bitirin)</span>
                             <button
                                 onClick={() => { setDrawMode(null); setActiveDrawCol(null); }}
-                                className="text-[10px] font-black uppercase text-red-500 hover:text-red-700 border-l border-amber-300 pl-3"
+                                className="text-[10px] font-black uppercase text-rose-400 hover:text-rose-300 border-l border-amber-500/30 pl-3"
                             >
                                 İPTAL
                             </button>
@@ -311,8 +311,8 @@ const MapEntry: React.FC = () => {
                     )}
 
                     {currentResolution && (
-                        <div className="bg-gray-100 px-3 py-1.5 rounded-lg">
-                            <span className="text-[10px] font-bold text-gray-500">
+                        <div className="bg-slate-800 px-3 py-1.5 rounded-lg">
+                            <span className="text-[10px] font-bold text-slate-400">
                                 Zoom: {currentZoom} | Çözünürlük: {currentResolution}
                             </span>
                         </div>
@@ -321,11 +321,11 @@ const MapEntry: React.FC = () => {
 
                 <div className="flex items-center gap-2">
                     <div className="relative hidden md:block">
-                        <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                        <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
                         <input
                             type="text"
                             placeholder="Konum Ara..."
-                            className="pl-9 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 w-64"
+                            className="pl-9 pr-4 py-2 bg-slate-900/50 text-slate-200 border border-white/10 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/50 w-64"
                         />
                     </div>
                 </div>
@@ -334,7 +334,7 @@ const MapEntry: React.FC = () => {
             {/* Main Content Area */}
             <div className="flex-1 flex min-h-0 overflow-hidden">
                 {/* Left Pane: Map (3/4) */}
-                <div className="flex-[3] relative bg-gray-200">
+                <div className="flex-[3] relative bg-slate-950">
                     <MapContainer
                         projectId={projectId}
                         onCellClick={handleCellClick}
@@ -351,12 +351,12 @@ const MapEntry: React.FC = () => {
                 </div>
 
                 {/* Right Pane: Form (1/4) */}
-                <div className="flex-1 bg-white border-l border-gray-100 flex flex-col min-h-0 shadow-xl z-20">
-                    <div className="p-6 border-b border-gray-50 flex justify-between items-center bg-gray-50/50 shrink-0">
+                <div className="flex-1 glass-panel border-white/5 border-l border-white/10 flex flex-col min-h-0 shadow-xl z-20">
+                    <div className="p-6 border-b border-white/5 flex justify-between items-center bg-slate-950/50 text-slate-200 shrink-0">
                         <div>
-                            <h2 className="font-bold text-gray-900">Veri Giriş Formu</h2>
+                            <h2 className="font-bold text-white">Veri Giriş Formu</h2>
                             {selectedCell && (
-                                <p className="text-xs text-primary-600 font-mono mt-1">
+                                <p className="text-xs text-cyan-400 font-mono mt-1">
                                     Hücre: {selectedCell.slice(-8)}
                                 </p>
                             )}
@@ -364,9 +364,9 @@ const MapEntry: React.FC = () => {
                         {selectedCell && (
                             <button
                                 onClick={() => { setSelectedCell(null); setFormData({}); }}
-                                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                                className="p-2 hover:bg-slate-800 rounded-lg transition-colors"
                             >
-                                <X className="h-4 w-4 text-gray-400" />
+                                <X className="h-4 w-4 text-slate-500" />
                             </button>
                         )}
                     </div>
@@ -375,8 +375,8 @@ const MapEntry: React.FC = () => {
                         {formDetails ? (
                             formDetails.columns.map((col: any) => (
                                 <div key={col.id} className="mb-6">
-                                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">
-                                        {col.label} {col.is_required && <span className="text-red-500">*</span>}
+                                    <label className="block text-xs font-bold text-slate-400 uppercase tracking-wide mb-2">
+                                        {col.label} {col.is_required && <span className="text-rose-400">*</span>}
                                     </label>
 
                                     {col.type === 'text' && (
@@ -385,7 +385,7 @@ const MapEntry: React.FC = () => {
                                             required={col.is_required}
                                             value={formData[col.name] || ''}
                                             onChange={(e) => handleInputChange(col.name, e.target.value)}
-                                            className="w-full bg-white border border-gray-100 py-3 px-4 rounded-xl focus:ring-2 focus:ring-primary-500 outline-none text-sm"
+                                            className="w-full glass-panel border-white/5 border border-white/10 py-3 px-4 rounded-xl focus:ring-2 focus:ring-cyan-500/50 outline-none text-sm"
                                             placeholder={col.label}
                                         />
                                     )}
@@ -396,7 +396,7 @@ const MapEntry: React.FC = () => {
                                             required={col.is_required}
                                             value={formData[col.name] || ''}
                                             onChange={(e) => handleInputChange(col.name, e.target.value)}
-                                            className="w-full bg-white border border-gray-100 py-3 px-4 rounded-xl focus:ring-2 focus:ring-primary-500 outline-none text-sm"
+                                            className="w-full glass-panel border-white/5 border border-white/10 py-3 px-4 rounded-xl focus:ring-2 focus:ring-cyan-500/50 outline-none text-sm"
                                             placeholder={col.label}
                                         />
                                     )}
@@ -408,7 +408,7 @@ const MapEntry: React.FC = () => {
                                                     key={v}
                                                     type="button"
                                                     onClick={() => handleInputChange(col.name, v)}
-                                                    className={`flex-1 h-12 rounded-xl font-bold border transition-all ${formData[col.name] === v ? 'bg-primary-600 text-white border-primary-600 shadow-md shadow-primary-200' : 'bg-white text-gray-400 border-gray-100 hover:border-gray-200'}`}
+                                                    className={`flex-1 h-12 rounded-xl font-bold border transition-all ${formData[col.name] === v ? 'bg-cyan-600 text-white border-primary-600 shadow-[0_0_20px_rgba(0,0,0,0.5)] shadow-primary-200' : 'glass-panel border-white/5 text-slate-500 border-white/10 hover:border-white/10'}`}
                                                 >
                                                     {v}
                                                 </button>
@@ -431,7 +431,7 @@ const MapEntry: React.FC = () => {
                                                         handleInputChange(col.name, val);
                                                     }
                                                 }}
-                                                className="w-full bg-white border border-gray-100 py-3 px-4 rounded-xl focus:ring-2 focus:ring-primary-500 outline-none text-sm appearance-none cursor-pointer"
+                                                className="w-full glass-panel border-white/5 border border-white/10 py-3 px-4 rounded-xl focus:ring-2 focus:ring-cyan-500/50 outline-none text-sm appearance-none cursor-pointer"
                                             >
                                                 <option value="">Seçiniz...</option>
                                                 {col.options?.map((opt: any) => (
@@ -449,7 +449,7 @@ const MapEntry: React.FC = () => {
                                                         placeholder="Lütfen belirtiniz..."
                                                         value={formData[col.name] || ''}
                                                         onChange={(e) => handleInputChange(col.name, e.target.value)}
-                                                        className="w-full bg-primary-50/50 border border-primary-100 py-3 px-4 rounded-xl focus:ring-2 focus:ring-primary-500 outline-none text-sm font-medium"
+                                                        className="w-full bg-cyan-500/10/50 border border-primary-100 py-3 px-4 rounded-xl focus:ring-2 focus:ring-cyan-500/50 outline-none text-sm font-medium"
                                                         required={col.is_required}
                                                     />
                                                 </div>
@@ -468,7 +468,7 @@ const MapEntry: React.FC = () => {
                                                             <button
                                                                 type="button"
                                                                 onClick={() => setColumnGeometryMode(col.name, 'grid')}
-                                                                className="flex-1 py-3 rounded-xl border border-cyan-200 bg-cyan-50 text-cyan-700 font-bold text-sm flex items-center justify-center gap-2 hover:bg-cyan-100 transition-all"
+                                                                className="flex-1 py-3 rounded-xl border border-cyan-200 bg-cyan-50 text-cyan-400 font-bold text-sm flex items-center justify-center gap-2 hover:bg-cyan-500/20 transition-all"
                                                             >
                                                                 <Grid3x3 className="h-4 w-4" />
                                                                 Grid Bazlı
@@ -476,7 +476,7 @@ const MapEntry: React.FC = () => {
                                                             <button
                                                                 type="button"
                                                                 onClick={() => setColumnGeometryMode(col.name, 'manual')}
-                                                                className="flex-1 py-3 rounded-xl border border-amber-200 bg-amber-50 text-amber-700 font-bold text-sm flex items-center justify-center gap-2 hover:bg-amber-100 transition-all"
+                                                                className="flex-1 py-3 rounded-xl border border-amber-200 bg-amber-50 text-amber-400 font-bold text-sm flex items-center justify-center gap-2 hover:bg-amber-100 transition-all"
                                                             >
                                                                 <Pencil className="h-4 w-4" />
                                                                 Manuel Çizim
@@ -486,14 +486,14 @@ const MapEntry: React.FC = () => {
 
                                                     {/* Grid selection mode */}
                                                     {geometryInputModes[col.name] === 'grid' && !formData[col.name] && (
-                                                        <div className="p-4 bg-cyan-50 border border-cyan-200 rounded-xl space-y-3">
-                                                            <p className="text-xs text-cyan-700">
+                                                        <div className="p-4 bg-cyan-500/10 border border-cyan-500/20 rounded-xl space-y-3">
+                                                            <p className="text-xs text-cyan-400">
                                                                 Haritadan gridleri seçin. <strong>Shift+Click</strong> ile seçimi kaldırın.
                                                             </p>
                                                             {selectedGridCells.length > 0 && (
                                                                 <div className="flex flex-wrap gap-1 max-h-20 overflow-y-auto">
                                                                     {selectedGridCells.slice(0, 10).map(cell => (
-                                                                        <span key={cell} className="bg-cyan-100 text-cyan-700 px-2 py-0.5 rounded text-[10px] font-mono">
+                                                                        <span key={cell} className="bg-cyan-500/20 text-cyan-400 px-2 py-0.5 rounded text-[10px] font-mono">
                                                                             {cell.slice(-6)}
                                                                         </span>
                                                                     ))}
@@ -516,7 +516,7 @@ const MapEntry: React.FC = () => {
                                                                 <button
                                                                     type="button"
                                                                     onClick={() => clearColumnGeometryMode(col.name)}
-                                                                    className="px-3 py-2 rounded-lg border border-gray-200 text-gray-600 font-bold text-xs"
+                                                                    className="px-3 py-2 rounded-lg border border-white/10 text-slate-300 font-bold text-xs"
                                                                 >
                                                                     <X className="h-4 w-4" />
                                                                 </button>
@@ -530,7 +530,7 @@ const MapEntry: React.FC = () => {
                                                             <button
                                                                 type="button"
                                                                 onClick={() => startDrawing(col.name, 'Polygon')}
-                                                                className="flex-1 py-4 rounded-xl border border-amber-200 bg-amber-50 text-amber-700 font-bold text-sm flex items-center justify-center gap-2"
+                                                                className="flex-1 py-4 rounded-xl border border-amber-200 bg-amber-50 text-amber-400 font-bold text-sm flex items-center justify-center gap-2"
                                                             >
                                                                 <Pencil className="h-4 w-4" />
                                                                 Poligon Çiz
@@ -538,7 +538,7 @@ const MapEntry: React.FC = () => {
                                                             <button
                                                                 type="button"
                                                                 onClick={() => clearColumnGeometryMode(col.name)}
-                                                                className="px-4 rounded-xl border border-gray-200 text-gray-500"
+                                                                className="px-4 rounded-xl border border-white/10 text-slate-400"
                                                             >
                                                                 <X className="h-4 w-4" />
                                                             </button>
@@ -548,7 +548,7 @@ const MapEntry: React.FC = () => {
                                                     {/* Show completed geometry */}
                                                     {formData[col.name] && (
                                                         <div className="flex items-center gap-2">
-                                                            <div className="flex-1 py-3 px-4 rounded-xl bg-green-50 border border-green-200 text-green-700 text-sm font-bold flex items-center gap-2">
+                                                            <div className="flex-1 py-3 px-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-sm font-bold flex items-center gap-2">
                                                                 <MapPin className="h-4 w-4" />
                                                                 {formData[col.name].type === 'GridSelection'
                                                                     ? `${formData[col.name].h3_indices?.length || 0} grid seçildi`
@@ -557,7 +557,7 @@ const MapEntry: React.FC = () => {
                                                             <button
                                                                 type="button"
                                                                 onClick={() => clearColumnGeometryMode(col.name)}
-                                                                className="p-2 rounded-lg border border-red-200 text-red-500 hover:bg-red-50"
+                                                                className="p-2 rounded-lg border border-rose-500/20 text-rose-400 hover:bg-rose-500/10"
                                                             >
                                                                 <Trash2 className="h-4 w-4" />
                                                             </button>
@@ -571,21 +571,21 @@ const MapEntry: React.FC = () => {
                                                         <button
                                                             type="button"
                                                             onClick={() => startDrawing(col.name, col.config?.geom_type || 'Point')}
-                                                            className="w-full py-4 rounded-xl border border-primary-100 bg-white text-primary-600 font-bold text-sm flex items-center justify-center gap-2 hover:bg-primary-50 transition-all"
+                                                            className="w-full py-4 rounded-xl border border-primary-100 glass-panel border-white/5 text-cyan-400 font-bold text-sm flex items-center justify-center gap-2 hover:bg-cyan-500/10 transition-all"
                                                         >
                                                             <MapPin className="h-4 w-4" />
                                                             {col.config?.geom_type === 'LineString' ? 'Çizgi Çiz' : 'Nokta İşaretle'}
                                                         </button>
                                                     ) : (
                                                         <div className="flex items-center gap-2">
-                                                            <div className="flex-1 py-3 px-4 rounded-xl bg-green-50 border border-green-200 text-green-700 text-sm font-bold flex items-center gap-2">
+                                                            <div className="flex-1 py-3 px-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-sm font-bold flex items-center gap-2">
                                                                 <MapPin className="h-4 w-4" />
                                                                 {col.config?.geom_type === 'LineString' ? 'Çizgi çizildi' : 'Nokta işaretlendi'}
                                                             </div>
                                                             <button
                                                                 type="button"
                                                                 onClick={() => handleInputChange(col.name, null)}
-                                                                className="p-2 rounded-lg border border-red-200 text-red-500 hover:bg-red-50"
+                                                                className="p-2 rounded-lg border border-rose-500/20 text-rose-400 hover:bg-rose-500/10"
                                                             >
                                                                 <Trash2 className="h-4 w-4" />
                                                             </button>
@@ -597,9 +597,9 @@ const MapEntry: React.FC = () => {
                                     )}
 
                                     {col.type === 'file' && (
-                                        <label className="w-full py-6 rounded-xl border-2 border-dashed border-gray-100 flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-gray-50 transition-all">
+                                        <label className="w-full py-6 rounded-xl border-2 border-dashed border-white/10 flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-slate-900/50 hover:text-slate-200 text-slate-300 transition-all">
                                             <FileUp className="h-6 w-6 text-gray-300" />
-                                            <span className="text-xs font-bold text-gray-400">Tıklayın veya Dosya Sürükleyin</span>
+                                            <span className="text-xs font-bold text-slate-500">Tıklayın veya Dosya Sürükleyin</span>
                                             <input
                                                 type="file"
                                                 className="hidden"
@@ -608,29 +608,29 @@ const MapEntry: React.FC = () => {
                                                     if (file) handleInputChange(col.name, file.name);
                                                 }}
                                             />
-                                            {formData[col.name] && <span className="text-[10px] text-primary-600 font-bold">{formData[col.name]} Seçildi</span>}
+                                            {formData[col.name] && <span className="text-[10px] text-cyan-400 font-bold">{formData[col.name]} Seçildi</span>}
                                         </label>
                                     )}
                                 </div>
                             ))
                         ) : (
                             <div className="py-20 text-center space-y-4">
-                                <div className="h-16 w-16 bg-red-50 text-red-400 rounded-full flex items-center justify-center mx-auto">
+                                <div className="h-16 w-16 bg-rose-500/10 text-rose-400 rounded-full flex items-center justify-center mx-auto">
                                     <Database className="h-8 w-8" />
                                 </div>
-                                <h4 className="font-bold text-gray-900">Form Atanmamış</h4>
-                                <p className="text-sm text-gray-500">Bu proje için size bir form atanmamış. Lütfen yönetici ile iletişime geçin.</p>
+                                <h4 className="font-bold text-white">Form Atanmamış</h4>
+                                <p className="text-sm text-slate-400">Bu proje için size bir form atanmamış. Lütfen yönetici ile iletişime geçin.</p>
                             </div>
                         )}
                     </div>
 
                     {formDetails && (
-                        <div className="p-6 border-t border-gray-50 bg-gray-50/50 shrink-0">
+                        <div className="p-6 border-t border-white/5 bg-slate-950/50 text-slate-200 shrink-0">
                             <button
                                 type="button"
                                 disabled={submitting || drawMode !== null || multiSelectMode}
                                 onClick={handleFormSubmit}
-                                className="w-full bg-primary-600 text-white py-4 rounded-2xl font-bold shadow-lg shadow-primary-200 hover:bg-primary-700 active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                                className="w-full bg-cyan-600 text-white py-4 rounded-2xl font-bold shadow-[0_0_15px_rgba(6,182,212,0.4)] hover:bg-cyan-500 active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
                             >
                                 {submitting ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
                                 Veriyi Gönder

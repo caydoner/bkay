@@ -1,4 +1,4 @@
-import React from 'react';
+
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from 'react-hot-toast';
@@ -17,14 +17,15 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <Router>
-        <div className="h-screen bg-gray-50 flex flex-col font-sans overflow-hidden">
+        <div className="h-screen bg-slate-950 text-slate-100 flex flex-col font-sans overflow-hidden">
           <Toaster
             position="top-right"
             toastOptions={{
               duration: 4000,
               style: {
-                background: '#fff',
-                color: '#363636',
+                background: '#1e293b',
+                color: '#f8fafc',
+                border: '1px solid rgba(255,255,255,0.1)'
               },
               success: {
                 iconTheme: {
