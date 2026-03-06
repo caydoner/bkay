@@ -3,9 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import api from '../../lib/api';
 import {
     Users as UsersIcon,
-    LayoutDashboard,
+    ClipboardList,
     LogOut,
-    
+
     Trash2,
     Loader2,
     Shield,
@@ -100,7 +100,7 @@ const AdminUsers: React.FC = () => {
                         onClick={() => navigate('/admin')}
                         className="w-full flex items-center gap-3 px-4 py-3 text-slate-400 hover:bg-white/5 hover:text-white rounded-xl transition-all"
                     >
-                        <LayoutDashboard className="h-5 w-5" /> Dashboard
+                        <ClipboardList className="h-5 w-5" /> Projects
                     </button>
                     <button
                         className="w-full flex items-center gap-3 px-4 py-3 bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 shadow-[0_0_15px_rgba(6,182,212,0.15)] rounded-xl transition-all"

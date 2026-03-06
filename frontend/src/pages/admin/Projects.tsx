@@ -6,7 +6,6 @@ import {
     Map as MapIcon,
     ClipboardList,
     Users,
-    LayoutDashboard,
     LogOut,
     ChevronRight,
     Clock,
@@ -15,7 +14,7 @@ import {
     Shield
 } from 'lucide-react';
 
-const AdminDashboard: React.FC = () => {
+const AdminProjects: React.FC = () => {
     const [projects, setProjects] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -81,7 +80,7 @@ const AdminDashboard: React.FC = () => {
 
                 <nav className="flex-1 p-4 space-y-2 overflow-y-auto font-medium">
                     <button className="w-full flex items-center gap-3 px-4 py-3 bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 shadow-[0_0_15px_rgba(6,182,212,0.15)] rounded-xl transition-all">
-                        <LayoutDashboard className="h-5 w-5" /> Dashboard
+                        <ClipboardList className="h-5 w-5" /> Projects
                     </button>
                     <button
                         onClick={() => navigate('/admin/users')}
@@ -103,9 +102,9 @@ const AdminDashboard: React.FC = () => {
 
             {/* Main Content */}
             <main className="flex-1 overflow-y-auto p-6 md:p-10 z-10 relative">
-                <header className="flex justify-between items-center mb-10">
+                <header className="flex justify-between items-center mb-6">
                     <div>
-                        <h2 className="text-3xl font-bold text-white tracking-tight">Active Projects</h2>
+                        <h2 className="text-3xl font-bold text-white tracking-tight">Projects</h2>
                         <p className="text-slate-400 mt-2 text-sm">Manage data collection instances and stakeholder analytics.</p>
                     </div>
                     <button
@@ -115,6 +114,31 @@ const AdminDashboard: React.FC = () => {
                         <Plus className="h-5 w-5" /> New Project
                     </button>
                 </header>
+
+                {/* Statistics Cards */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    <div className="glass-card rounded-2xl p-6 border-white/5 relative overflow-hidden group">
+                        <div className="absolute -right-4 -top-4 w-28 h-28 bg-white/5 rounded-full blur-2xl group-hover:bg-white/10 transition-all"></div>
+                        <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-2">
+                            <ClipboardList className="h-4 w-4" /> Total Projects
+                        </p>
+                        <h3 className="text-4xl font-black text-white">{projects.length}</h3>
+                    </div>
+                    <div className="glass-card rounded-2xl p-6 border-white/5 relative overflow-hidden group">
+                        <div className="absolute -right-4 -top-4 w-28 h-28 bg-cyan-500/10 rounded-full blur-2xl group-hover:bg-cyan-500/20 transition-all"></div>
+                        <p className="text-[11px] font-bold text-cyan-500/80 uppercase tracking-widest mb-2 flex items-center gap-2">
+                            <Clock className="h-4 w-4" /> In Progress
+                        </p>
+                        <h3 className="text-4xl font-black text-cyan-400">{projects.length}</h3>
+                    </div>
+                    <div className="glass-card rounded-2xl p-6 border-white/5 relative overflow-hidden group">
+                        <div className="absolute -right-4 -top-4 w-28 h-28 bg-emerald-500/10 rounded-full blur-2xl group-hover:bg-emerald-500/20 transition-all"></div>
+                        <p className="text-[11px] font-bold text-emerald-500/80 uppercase tracking-widest mb-2 flex items-center gap-2">
+                            <Shield className="h-4 w-4" /> Completed
+                        </p>
+                        <h3 className="text-4xl font-black text-emerald-400">0</h3>
+                    </div>
+                </div>
 
                 {/* Project Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -240,4 +264,4 @@ const AdminDashboard: React.FC = () => {
     );
 };
 
-export default AdminDashboard;
+export default AdminProjects;

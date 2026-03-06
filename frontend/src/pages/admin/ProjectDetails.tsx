@@ -5,7 +5,8 @@ import toast from 'react-hot-toast';
 import MapContainer from '../../components/map/MapContainer';
 import {
     ChevronLeft,
-    Save,
+    ChevronUp,
+    ChevronDown,
     Map as MapIcon,
     Settings,
     Table as TableIcon,
@@ -38,9 +39,10 @@ import { kml } from '@tmcw/togeojson';
 const ProjectDetails: React.FC = () => {
     const { id } = useParams();
     const navigate = useNavigate();
-    const [activeTab, setActiveTab] = useState<'general' | 'map' | 'table' | 'forms' | 'stakeholders' | 'data'>('general');
+    const [activeTab, setActiveTab] = useState<'map' | 'table' | 'forms' | 'stakeholders' | 'data'>('map');
     const [project, setProject] = useState<any>(null);
     const [loading, setLoading] = useState(true);
+    const [isHeaderCollapsed, setIsHeaderCollapsed] = useState(false);
 
     // Grid regeneration warning
     const [showAreaDataWarning, setShowAreaDataWarning] = useState(false);
@@ -87,7 +89,6 @@ const ProjectDetails: React.FC = () => {
     const [isEditingModalOpen, setIsEditingModalOpen] = useState(false);
     const [editingResponse, setEditingResponse] = useState<any>(null);
     const [isDeleting, setIsDeleting] = useState(false);
-    const [fitTrigger, setFitTrigger] = useState(0);
 
     // Local UI states
     const [optionsText, setOptionsText] = useState('');
@@ -172,7 +173,7 @@ const ProjectDetails: React.FC = () => {
         if (!editingResponse) return;
 
         try {
-            const res = await api.put(`/responses/${editingResponse.id}`, {
+            const res = await api.put(`/ responses / ${editingResponse.id} `, {
                 project_id: editingResponse.project_id,
                 h3_index: editingResponse.h3_index,
                 response_data: editingResponse.response_data
@@ -378,15 +379,6 @@ const ProjectDetails: React.FC = () => {
             setAssignments(assignResponse.data || []);
         } catch (err) {
             console.error('Error fetching users or assignments:', err);
-        }
-    };
-
-    const handleSaveGeneral = async () => {
-        try {
-            await api.patch(`/projects/${id}`, { name: project.name, description: project.description });
-            alert('Kaydedildi');
-        } catch (err: any) {
-            alert('Hata: ' + (err.response?.data?.detail || err.message));
         }
     };
 
@@ -677,359 +669,555 @@ const ProjectDetails: React.FC = () => {
 
     if (loading) return <div className="p-10 text-center text-cyan-400 font-bold flex items-center justify-center gap-2"><Loader2 className="h-6 w-6 animate-spin" /> Yükleniyor...</div>;
 
+    // Helper to get selected response geometry for the data tab map view
+    const getActiveResponseGeometryData = () => {
+        const activeResponse = selectedResponse || (selectedResponseIds.size > 0
+            ? responses.find((r: any) => r.id === Array.from(selectedResponseIds)[0])
+            : null);
+
+        if (activeResponse?.response_data) {
+            const geomEntry = Object.entries(activeResponse.response_data).find(([_, v]: [string, any]) =>
+                v && (v.type === 'GridSelection' || v.type || v.coordinates || v.features)
+            );
+
+            if (geomEntry) {
+                const [_, geomData] = geomEntry as [string, any];
+                if (geomData.type === 'GridSelection') {
+                    return { selectedCells: geomData.h3_indices || [] };
+                }
+                if (geomData.type === 'FeatureCollection' && geomData.features?.length > 0) {
+                    return { initialGeometry: geomData.features[0].geometry };
+                }
+                if (geomData.type === 'Feature') {
+                    return { initialGeometry: geomData.geometry };
+                }
+                return { initialGeometry: geomData };
+            }
+        }
+        return {};
+    };
+
+    const mapGeomData = activeTab === 'data' ? getActiveResponseGeometryData() : {};
+
     return (
         <>
-            <div className="flex-1 flex flex-col bg-slate-900/50 text-slate-200 overflow-hidden">
-                {/* Header */}
-                <header className="glass-panel border-white/5 border-b border-white/10 p-4 flex justify-between items-center shadow-[0_0_15px_rgba(0,0,0,0.5)] z-10">
-                    <div className="flex items-center gap-4">
-                        <button onClick={() => navigate('/admin')} className="p-2 hover:bg-slate-800 rounded-lg transition-colors">
-                            <ChevronLeft className="h-6 w-6 text-slate-300" />
-                        </button>
-                        <div className="h-10 w-10 bg-cyan-500/20 border border-cyan-500/30 rounded-xl flex items-center justify-center text-cyan-400">
-                            <Database className="h-6 w-6" />
-                        </div>
-                        <div>
-                            <h1 className="font-bold text-white">{project?.name}</h1>
-                            <p className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Proje Yönetimi</p>
-                        </div>
-                    </div>
-                </header>
-
-                {/* Tabs */}
-                <div className="glass-panel border-white/5 border-b border-white/10 px-6 sm:px-10 flex gap-8 overflow-x-auto scrollbar-hide">
-                    {[
-                        { id: 'general', label: 'Genel', icon: Settings },
-                        { id: 'map', label: 'Harita', icon: MapIcon },
-                        { id: 'table', label: 'Tablo', icon: TableIcon },
-                        { id: 'forms', label: 'Formlar', icon: ClipboardList },
-                        { id: 'stakeholders', label: 'Atamalar', icon: UsersIcon },
-                        { id: 'data', label: 'Veri', icon: Database }
-                    ].map(tab => (
-                        <button
-                            key={tab.id}
-                            onClick={() => setActiveTab(tab.id as any)}
-                            className={`flex items-center gap-2 py-4 border-b-2 font-bold transition-all whitespace-nowrap text-sm ${activeTab === tab.id
-                                ? 'border-primary-600 text-cyan-400'
-                                : 'border-transparent text-slate-500 hover:text-slate-300'
-                                }`}
-                        >
-                            <tab.icon className="h-4 w-4" />
-                            {tab.label}
-                        </button>
-                    ))}
+            <div className="flex-1 relative flex flex-col h-full h-[calc(100vh)] overflow-hidden bg-slate-950">
+                {/* Full Bleed Background Map */}
+                <div className="absolute inset-0">
+                    <MapContainer
+                        projectId={id}
+                        areaId={activeTab === 'map' ? (selectedAreaId || undefined) : undefined}
+                        initialGeometry={activeTab === 'map' ? (selectedAreaId ? projectAreas.find(a => a.id === selectedAreaId)?.boundary_geom : boundary) : mapGeomData.initialGeometry}
+                        selectedCells={mapGeomData.selectedCells}
+                        onZoomChange={setCurrentZoom}
+                        onLoad={(map: any, draw: any) => {
+                            if (draw) {
+                                const updateGeom = () => {
+                                    const data = draw.getAll();
+                                    if (data.features.length > 0) {
+                                        setDrawnGeometry(data.features[0].geometry);
+                                    }
+                                };
+                                map.on('draw.create', updateGeom);
+                                map.on('draw.update', updateGeom);
+                                map.on('draw.delete', () => setDrawnGeometry(null));
+                            }
+                        }}
+                        autoZoom={activeTab === 'data'}
+                    />
                 </div>
 
-                {/* Content */}
-                <div className={`flex-1 flex flex-col min-h-0 bg-slate-950/50 text-slate-200 ${activeTab === 'map' ? 'p-0 overflow-hidden' : 'p-4 sm:p-8 overflow-y-auto pb-32'}`}>
-                    {activeTab === 'general' && (
-                        <div className="max-w-2xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-300">
-                            <div className="glass-panel border-white/5 rounded-3xl p-8 shadow-[0_0_15px_rgba(0,0,0,0.5)] border border-white/10 space-y-6">
-                                <div className="space-y-2">
-                                    <label className="text-xs font-bold text-slate-400 uppercase tracking-wider px-1">Proje Adı</label>
-                                    <input
-                                        type="text"
-                                        value={project?.name || ''}
-                                        onChange={(e) => setProject({ ...project, name: e.target.value })}
-                                        className="w-full bg-slate-900/50 text-slate-200 border border-white/10 py-3.5 px-4 rounded-2xl focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:bg-white/5 transition-all text-white font-medium"
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <label className="text-xs font-bold text-slate-400 uppercase tracking-wider px-1">Açıklama</label>
-                                    <textarea
-                                        rows={4}
-                                        value={project?.description || ''}
-                                        onChange={(e) => setProject({ ...project, description: e.target.value })}
-                                        className="w-full bg-slate-900/50 text-slate-200 border border-white/10 py-3.5 px-4 rounded-2xl focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:bg-white/5 transition-all text-white font-medium resize-none"
-                                    />
-                                </div>
-                                <button onClick={handleSaveGeneral} className="w-full bg-cyan-600 text-white py-4 rounded-2xl font-bold shadow-[0_0_15px_rgba(6,182,212,0.4)] hover:bg-cyan-500 transition-all flex items-center justify-center gap-2">
-                                    <Save className="h-5 w-5" /> Değişiklikleri Kaydet
+                {/* Top HUD Layer (Header + Tabs) */}
+                <div className="relative z-10 w-full p-4 pb-0 pointer-events-none flex flex-col items-center">
+                    <div className="w-full max-w-7xl glass-panel border-white/5 rounded-3xl shadow-[0_0_30px_rgba(0,0,0,0.8)] backdrop-blur-3xl bg-slate-900/95 pointer-events-auto border border-white/20 overflow-hidden transition-all duration-300">
+                        <header className="p-4 flex justify-between items-center z-10 bg-transparent shadow-none border-b border-white/10">
+                            <div className="flex items-center gap-4">
+                                <button onClick={() => navigate('/admin')} className="p-2 hover:bg-slate-800 rounded-lg transition-colors">
+                                    <ChevronLeft className="h-6 w-6 text-slate-300" />
                                 </button>
+                                <div className="h-10 w-10 bg-cyan-500/20 border border-cyan-500/30 rounded-xl flex items-center justify-center text-cyan-400">
+                                    <Database className="h-6 w-6" />
+                                </div>
+                                <div>
+                                    <h1 className="font-bold text-white">{project?.name}</h1>
+                                    <p className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Proje Yönetimi</p>
+                                </div>
                             </div>
-                        </div>
-                    )}
+                            <button
+                                onClick={() => setIsHeaderCollapsed(!isHeaderCollapsed)}
+                                className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors"
+                                title={isHeaderCollapsed ? "Genişlet" : "Daralt"}
+                            >
+                                {isHeaderCollapsed ? <ChevronDown className="h-5 w-5" /> : <ChevronUp className="h-5 w-5" />}
+                            </button>
+                        </header>
 
-                    {activeTab === 'map' && (
-                        <div className="flex-grow flex flex-col h-full min-h-0 relative animate-in fade-in duration-300">
-                            <MapContainer
-                                projectId={id}
-                                areaId={selectedAreaId || undefined}
-                                initialGeometry={selectedAreaId ? projectAreas.find(a => a.id === selectedAreaId)?.boundary_geom : boundary}
-                                onZoomChange={setCurrentZoom}
-                                onLoad={(map: any, draw: any) => {
-                                    if (draw) {
-                                        const updateGeom = () => {
-                                            const data = draw.getAll();
-                                            if (data.features.length > 0) {
-                                                setDrawnGeometry(data.features[0].geometry);
-                                            }
-                                        };
-                                        map.on('draw.create', updateGeom);
-                                        map.on('draw.update', updateGeom);
-                                        map.on('draw.delete', () => setDrawnGeometry(null));
-                                    }
-                                }}
-                            />
-                            <div className="absolute top-4 right-4 bg-slate-900/80 backdrop-blur-xl border border-white/5 backdrop-blur-md p-4 rounded-2xl shadow-xl border border-white/10 flex flex-col gap-4 z-10 w-72">
-                                {/* Area Selection */}
-                                <div className="space-y-2">
-                                    <span className="text-xs font-bold text-slate-300 uppercase tracking-tight">Alan Seçimi</span>
-
-                                    {/* Area Dropdown */}
-                                    <select
-                                        value={selectedAreaId}
-                                        onChange={(e) => {
-                                            const areaId = e.target.value;
-                                            setSelectedAreaId(areaId);
-                                            if (areaId) {
-                                                // Load area's grid settings
-                                                const area = projectAreas.find(a => a.id === areaId);
-                                                if (area) {
-                                                    if (area.min_cell_area_km2) setMinCellAreaKm2(area.min_cell_area_km2);
-                                                    if (area.max_cell_area_km2) setMaxCellAreaKm2(area.max_cell_area_km2);
-                                                    if (area.num_resolutions) setNumResolutions(area.num_resolutions);
-                                                }
-                                            }
-                                        }}
-                                        className="w-full bg-slate-900/50 text-slate-200 border border-white/10 py-2 px-3 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
+                        {!isHeaderCollapsed && (
+                            <div className="px-6 flex gap-6 overflow-x-auto scrollbar-hide pt-4">
+                                {[
+                                    { id: 'map', label: 'Proje Alanı Tanımlama', icon: MapIcon },
+                                    { id: 'table', label: 'Tablo', icon: TableIcon },
+                                    { id: 'forms', label: 'Formlar', icon: ClipboardList },
+                                    { id: 'stakeholders', label: 'Atamalar', icon: UsersIcon },
+                                    { id: 'data', label: 'Veri', icon: Database }
+                                ].map(tab => (
+                                    <button
+                                        key={tab.id}
+                                        onClick={() => setActiveTab(activeTab === tab.id ? null : tab.id as any)}
+                                        className={`flex items-center gap-2 min-w-max pb-4 border-b-2 font-bold transition-all text-sm ${activeTab === tab.id
+                                            ? 'border-cyan-400 text-cyan-300 bg-slate-800/50 px-3 rounded-t-lg'
+                                            : 'border-transparent text-slate-300 hover:text-white hover:bg-slate-800/30 px-3 rounded-t-lg'
+                                            }`}
                                     >
-                                        <option value="" disabled>Alan Seçin...</option>
-                                        {projectAreas.map((area) => (
-                                            <option key={area.id} value={area.id}>
-                                                {area.name} {area.grids_generated ? '✓' : ''}
-                                            </option>
-                                        ))}
-                                    </select>
+                                        <tab.icon className="h-4 w-4" />
+                                        {tab.label}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                </div>
 
-                                    {/* Selected Area Actions */}
-                                    {selectedAreaId && (
-                                        <div className="flex gap-2">
-                                            <button
-                                                onClick={() => handleDeleteArea(selectedAreaId)}
-                                                className="flex-1 bg-red-50 text-red-600 py-1.5 rounded-lg text-xs font-bold hover:bg-red-100 transition-all flex items-center justify-center gap-1"
-                                            >
-                                                <Trash2 className="h-3 w-3" /> Alanı Sil
-                                            </button>
-                                        </div>
-                                    )}
+                {/* Floating Content Panels */}
+                <div className="relative z-10 flex-1 flex pointer-events-none p-4 overflow-hidden justify-center max-w-7xl mx-auto w-full">
+                    {activeTab === 'map' && (
+                        <div className="w-[340px] glass-panel border-white/5 rounded-3xl p-6 shadow-[0_0_30px_rgba(0,0,0,0.8)] backdrop-blur-2xl bg-slate-900/80 border border-white/10 space-y-6 pointer-events-auto absolute left-4 top-4 bottom-4 overflow-y-auto custom-scrollbar animate-in slide-in-from-left-8 duration-300 flex flex-col gap-4 z-10">
+                            {/* Area Selection */}
+                            <div className="space-y-2">
+                                <span className="text-xs font-bold text-slate-300 uppercase tracking-tight">Alan Seçimi</span>
 
-                                    {/* New Area Input */}
-                                    <div className="flex gap-2 pt-2 border-t border-white/10">
-                                        <input
-                                            type="text"
-                                            placeholder="Yeni alan adı..."
-                                            value={newAreaName}
-                                            onChange={(e) => setNewAreaName(e.target.value)}
-                                            className="flex-1 bg-slate-900/50 text-slate-200 border border-white/10 py-2 px-3 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
-                                        />
+                                {/* Area Dropdown */}
+                                <select
+                                    value={selectedAreaId}
+                                    onChange={(e) => {
+                                        const areaId = e.target.value;
+                                        setSelectedAreaId(areaId);
+                                        if (areaId) {
+                                            // Load area's grid settings
+                                            const area = projectAreas.find(a => a.id === areaId);
+                                            if (area) {
+                                                if (area.min_cell_area_km2) setMinCellAreaKm2(area.min_cell_area_km2);
+                                                if (area.max_cell_area_km2) setMaxCellAreaKm2(area.max_cell_area_km2);
+                                                if (area.num_resolutions) setNumResolutions(area.num_resolutions);
+                                            }
+                                        }
+                                    }}
+                                    className="w-full bg-slate-900/50 text-slate-200 border border-white/10 py-2 px-3 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
+                                >
+                                    <option value="" disabled>Alan Seçin...</option>
+                                    {projectAreas.map((area) => (
+                                        <option key={area.id} value={area.id}>
+                                            {area.name} {area.grids_generated ? '✓' : ''}
+                                        </option>
+                                    ))}
+                                </select>
+
+                                {/* Selected Area Actions */}
+                                {selectedAreaId && (
+                                    <div className="flex gap-2">
                                         <button
-                                            onClick={handleSaveAsArea}
-                                            disabled={!drawnGeometry || !newAreaName.trim() || savingArea}
-                                            className="bg-green-600 text-white px-3 py-2 rounded-xl text-xs font-bold hover:bg-green-700 transition-all disabled:opacity-50 flex items-center gap-1"
+                                            onClick={() => handleDeleteArea(selectedAreaId)}
+                                            className="flex-1 bg-red-50 text-red-600 py-1.5 rounded-lg text-xs font-bold hover:bg-red-100 transition-all flex items-center justify-center gap-1"
                                         >
-                                            {savingArea ? <Loader2 className="h-3 w-3 animate-spin" /> : <Plus className="h-3 w-3" />}
-                                            Kaydet
+                                            <Trash2 className="h-3 w-3" /> Alanı Sil
                                         </button>
                                     </div>
-                                </div>
+                                )}
 
-                                <div className="border-t border-white/10" />
-
-                                {/* Grid Settings */}
-                                <div className="space-y-3">
-                                    <div className="flex items-center justify-between">
-                                        <span className="text-xs font-bold text-slate-300 uppercase tracking-tight">Grid Ayarları</span>
-                                        <span className="text-[9px] text-slate-500 italic">~yaklaşık değerler</span>
-                                    </div>
-
-                                    {/* Current Resolution Indicator */}
-                                    {currentResolution !== null && (
-                                        <div className="bg-cyan-500/10 rounded-lg p-2 text-center">
-                                            <span className="text-[10px] text-cyan-400 font-bold">
-                                                Gösterilen: Çözünürlük {currentResolution} (Zoom: {currentZoom})
-                                            </span>
-                                        </div>
-                                    )}
-
-                                    {/* Min Cell Area (km²) */}
-                                    <div className="space-y-1">
-                                        <label className="text-[10px] text-slate-400 flex justify-between">
-                                            <span>En Küçük Grid:</span>
-                                            <span className="font-bold text-slate-300">
-                                                ~{minCellAreaKm2 < 0.001 ? `${(minCellAreaKm2 * 1000000).toFixed(0)} m²` : `${minCellAreaKm2.toFixed(3)} km²`}
-                                            </span>
-                                        </label>
-                                        <input
-                                            type="range"
-                                            min="0.00005"
-                                            max="0.01"
-                                            step="0.00005"
-                                            value={minCellAreaKm2}
-                                            onChange={(e) => setMinCellAreaKm2(parseFloat(e.target.value))}
-                                            className="accent-primary-600 w-full h-1.5"
-                                        />
-                                    </div>
-
-                                    {/* Max Cell Area (km²) */}
-                                    <div className="space-y-1">
-                                        <label className="text-[10px] text-slate-400 flex justify-between">
-                                            <span>En Büyük Grid:</span>
-                                            <span className="font-bold text-slate-300">~{maxCellAreaKm2.toFixed(1)} km²</span>
-                                        </label>
-                                        <input
-                                            type="range"
-                                            min="0.1"
-                                            max="50"
-                                            step="0.1"
-                                            value={maxCellAreaKm2}
-                                            onChange={(e) => setMaxCellAreaKm2(parseFloat(e.target.value))}
-                                            className="accent-primary-600 w-full h-1.5"
-                                        />
-                                    </div>
-
-                                    {/* Number of Resolution Levels */}
-                                    <div className="space-y-1">
-                                        <label className="text-[10px] text-slate-400 flex justify-between">
-                                            <span>Çözünürlük Sayısı:</span>
-                                            <span className="font-bold text-slate-300">{numResolutions}</span>
-                                        </label>
-                                        <input
-                                            type="range"
-                                            min="3"
-                                            max="10"
-                                            value={numResolutions}
-                                            onChange={(e) => setNumResolutions(parseInt(e.target.value))}
-                                            className="accent-primary-600 w-full h-1.5"
-                                        />
-                                    </div>
-                                </div>
-
-                                <div className="flex flex-col gap-2 border-t border-white/10 pt-3">
-                                    <label className="flex items-center justify-center gap-2 w-full bg-slate-900/50 text-slate-200 border border-white/10 text-slate-300 py-2 rounded-xl font-bold cursor-pointer hover:bg-slate-800 transition-all text-xs">
-                                        <FileUp className="h-4 w-4" /> KML/GeoJSON Yükle
-                                        <input type="file" accept=".kml,.geojson" className="hidden" onChange={handleFileUpload} />
-                                    </label>
-
-                                    {/* Removed handleSaveBoundary button as it's legacy */}
-
+                                {/* New Area Input */}
+                                <div className="flex gap-2 pt-2 border-t border-white/10">
+                                    <input
+                                        type="text"
+                                        placeholder="Yeni alan adı..."
+                                        value={newAreaName}
+                                        onChange={(e) => setNewAreaName(e.target.value)}
+                                        className="flex-1 bg-slate-900/50 text-slate-200 border border-white/10 py-2 px-3 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
+                                    />
                                     <button
-                                        onClick={handleGenerateGrid}
-                                        disabled={generatingGrids || (!selectedAreaId && !drawnGeometry)}
-                                        className="w-full bg-indigo-600 text-white py-2.5 rounded-xl font-bold shadow-lg shadow-indigo-200 hover:bg-indigo-700 transition-all active:scale-95 text-xs flex items-center justify-center gap-2 disabled:opacity-50"
+                                        onClick={handleSaveAsArea}
+                                        disabled={!drawnGeometry || !newAreaName.trim() || savingArea}
+                                        className="bg-green-600 text-white px-3 py-2 rounded-xl text-xs font-bold hover:bg-green-700 transition-all disabled:opacity-50 flex items-center gap-1"
                                     >
-                                        {generatingGrids ? <Loader2 className="h-4 w-4 animate-spin" /> : <GridIcon className="h-4 w-4" />}
-                                        {generatingGrids ? 'Üretiliyor...' : (selectedAreaId ? 'Alan Gridlerini Üret' : 'Gridleri Üret')}
+                                        {savingArea ? <Loader2 className="h-3 w-3 animate-spin" /> : <Plus className="h-3 w-3" />}
+                                        Kaydet
                                     </button>
-
-                                    {generatingGrids && (
-                                        <div className="space-y-2 pt-1 border-t border-white/10 mt-1">
-                                            <div className="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
-                                                <div
-                                                    className="bg-indigo-600 h-full transition-all duration-300"
-                                                    style={{ width: `${generationProgress}%` }}
-                                                />
-                                            </div>
-                                            <p className="text-[10px] text-slate-400 font-medium animate-pulse text-center">{generationMessage}</p>
-                                        </div>
-                                    )}
                                 </div>
+                            </div>
+
+                            <div className="border-t border-white/10" />
+
+                            {/* Grid Settings */}
+                            <div className="space-y-3">
+                                <div className="flex items-center justify-between">
+                                    <span className="text-xs font-bold text-slate-300 uppercase tracking-tight">Grid Ayarları</span>
+                                    <span className="text-[9px] text-slate-500 italic">~yaklaşık değerler</span>
+                                </div>
+
+                                {/* Current Resolution Indicator */}
+                                {currentResolution !== null && (
+                                    <div className="bg-cyan-500/10 rounded-lg p-2 text-center">
+                                        <span className="text-[10px] text-cyan-400 font-bold">
+                                            Gösterilen: Çözünürlük {currentResolution} (Zoom: {currentZoom})
+                                        </span>
+                                    </div>
+                                )}
+
+                                {/* Min Cell Area (km²) */}
+                                <div className="space-y-1">
+                                    <label className="text-[10px] text-slate-400 flex justify-between">
+                                        <span>En Küçük Grid:</span>
+                                        <span className="font-bold text-slate-300">
+                                            ~{minCellAreaKm2 < 0.001 ? `${(minCellAreaKm2 * 1000000).toFixed(0)} m²` : `${minCellAreaKm2.toFixed(3)} km²`}
+                                        </span>
+                                    </label>
+                                    <input
+                                        type="range"
+                                        min="0.00005"
+                                        max="0.01"
+                                        step="0.00005"
+                                        value={minCellAreaKm2}
+                                        onChange={(e) => setMinCellAreaKm2(parseFloat(e.target.value))}
+                                        className="accent-primary-600 w-full h-1.5"
+                                    />
+                                </div>
+
+                                {/* Max Cell Area (km²) */}
+                                <div className="space-y-1">
+                                    <label className="text-[10px] text-slate-400 flex justify-between">
+                                        <span>En Büyük Grid:</span>
+                                        <span className="font-bold text-slate-300">~{maxCellAreaKm2.toFixed(1)} km²</span>
+                                    </label>
+                                    <input
+                                        type="range"
+                                        min="0.1"
+                                        max="50"
+                                        step="0.1"
+                                        value={maxCellAreaKm2}
+                                        onChange={(e) => setMaxCellAreaKm2(parseFloat(e.target.value))}
+                                        className="accent-primary-600 w-full h-1.5"
+                                    />
+                                </div>
+
+                                {/* Number of Resolution Levels */}
+                                <div className="space-y-1">
+                                    <label className="text-[10px] text-slate-400 flex justify-between">
+                                        <span>Çözünürlük Sayısı:</span>
+                                        <span className="font-bold text-slate-300">{numResolutions}</span>
+                                    </label>
+                                    <input
+                                        type="range"
+                                        min="3"
+                                        max="10"
+                                        value={numResolutions}
+                                        onChange={(e) => setNumResolutions(parseInt(e.target.value))}
+                                        className="accent-primary-600 w-full h-1.5"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="flex flex-col gap-2 border-t border-white/10 pt-3">
+                                <label className="flex items-center justify-center gap-2 w-full bg-slate-900/50 text-slate-200 border border-white/10 text-slate-300 py-2 rounded-xl font-bold cursor-pointer hover:bg-slate-800 transition-all text-xs">
+                                    <FileUp className="h-4 w-4" /> KML/GeoJSON Yükle
+                                    <input type="file" accept=".kml,.geojson" className="hidden" onChange={handleFileUpload} />
+                                </label>
+
+                                {/* Removed handleSaveBoundary button as it's legacy */}
+
+                                <button
+                                    onClick={handleGenerateGrid}
+                                    disabled={generatingGrids || (!selectedAreaId && !drawnGeometry)}
+                                    className="w-full bg-indigo-600 text-white py-2.5 rounded-xl font-bold shadow-lg shadow-indigo-200 hover:bg-indigo-700 transition-all active:scale-95 text-xs flex items-center justify-center gap-2 disabled:opacity-50"
+                                >
+                                    {generatingGrids ? <Loader2 className="h-4 w-4 animate-spin" /> : <GridIcon className="h-4 w-4" />}
+                                    {generatingGrids ? 'Üretiliyor...' : (selectedAreaId ? 'Alan Gridlerini Üret' : 'Gridleri Üret')}
+                                </button>
+
+                                {generatingGrids && (
+                                    <div className="space-y-2 pt-1 border-t border-white/10 mt-1">
+                                        <div className="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                                            <div
+                                                className="bg-indigo-600 h-full transition-all duration-300"
+                                                style={{ width: `${generationProgress}%` }}
+                                            />
+                                        </div>
+                                        <p className="text-[10px] text-slate-400 font-medium animate-pulse text-center">{generationMessage}</p>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     )}
 
                     {activeTab === 'table' && (
-                        <div className="max-w-4xl mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-300">
-                            <div className="flex justify-between items-center glass-panel border-white/5 p-6 rounded-3xl shadow-[0_0_15px_rgba(0,0,0,0.5)] border border-white/10">
-                                <div>
-                                    <h3 className="text-xl font-bold text-white">Proje Tablosu</h3>
-                                    <p className="text-sm text-slate-400">Master veri yapısını tanımlayın.</p>
-                                </div>
-                                <button
-                                    onClick={() => {
-                                        setEditingColumn({ label: '', type: 'text', is_required: false, options: [], config: {} });
-                                        setOptionsText('');
-                                        setIsColumnModalOpen(true);
-                                    }}
-                                    className="flex items-center gap-2 bg-cyan-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-cyan-500 transition-all shadow-lg"
-                                >
-                                    <Plus className="h-5 w-5" /> Kolon Ekle
-                                </button>
-                            </div>
-
-                            <div className="grid grid-cols-1 gap-3">
-                                {columns.map(col => (
-                                    <div key={col.id} className="glass-panel border-white/5 p-5 rounded-2xl shadow-[0_0_15px_rgba(0,0,0,0.5)] border border-white/10 flex items-center justify-between group hover:border-primary-100 transition-all">
-                                        <div className="flex items-center gap-4">
-                                            <div className="h-10 w-10 bg-slate-900/50 text-slate-200 rounded-xl flex items-center justify-center text-slate-500">
-                                                <Table2 className="h-5 w-5" />
+                        <div className="w-[600px] max-w-full glass-panel border-white/5 rounded-3xl p-6 shadow-[0_0_30px_rgba(0,0,0,0.8)] backdrop-blur-2xl bg-slate-900/80 border border-white/10 space-y-6 pointer-events-auto h-fit absolute right-4 top-4 bottom-4 overflow-y-auto custom-scrollbar animate-in slide-in-from-right-8 duration-300">
+                            {isColumnModalOpen ? (
+                                <div className="glass-panel border-white/5 w-full h-full flex flex-col rounded-3xl shadow-2xl overflow-hidden">
+                                    <div className="p-6 border-b flex justify-between items-center bg-slate-900/50 text-slate-200">
+                                        <h3 className="font-bold flex items-center gap-2">
+                                            <Database className="h-4 w-4 text-cyan-400" />
+                                            Kolon Tanımla
+                                        </h3>
+                                        <button onClick={() => setIsColumnModalOpen(false)} className="text-slate-500 hover:text-slate-300 text-2xl font-bold">&times;</button>
+                                    </div>
+                                    <form onSubmit={handleSaveColumn} className="p-6 space-y-4 flex-1 overflow-y-auto custom-scrollbar">
+                                        <div className="space-y-1">
+                                            <label className="text-[10px] font-bold text-slate-500 uppercase ml-1">Görünür Başlık</label>
+                                            <input required type="text" placeholder="Örn: Yaş, Şehir, Notlar" value={editingColumn.label} onChange={(e) => setEditingColumn({ ...editingColumn, label: e.target.value })} className="w-full bg-slate-900/50 text-slate-200 p-3 rounded-xl border border-white/10 focus:ring-2 focus:ring-cyan-500/50 outline-none font-medium placeholder:text-gray-300 transition-all" />
+                                        </div>
+                                        <div className="space-y-1">
+                                            <label className="text-[10px] font-bold text-slate-500 uppercase ml-1">Veri Tipi</label>
+                                            <div className="grid grid-cols-2 gap-2">
+                                                {[
+                                                    { id: 'text', label: 'Metin', icon: Type },
+                                                    { id: 'number', label: 'Sayı', icon: Hash },
+                                                    { id: 'date', label: 'Tarih', icon: Calendar },
+                                                    { id: 'rating', label: 'Puan (1-5)', icon: Star },
+                                                    { id: 'select', label: 'Liste', icon: ListFilter },
+                                                    { id: 'geometry', label: 'Geometri', icon: MapPin },
+                                                    { id: 'file', label: 'Dosya (PDF/JPG)', icon: FileCode },
+                                                ].map(t => (
+                                                    <button
+                                                        key={t.id}
+                                                        type="button"
+                                                        onClick={() => setEditingColumn({ ...editingColumn, type: t.id, config: t.id === 'geometry' ? { geom_type: 'Point' } : (t.id === 'file' ? { allowed_types: ['pdf', 'jpg'] } : {}) })}
+                                                        className={`flex items-center gap-2 p-3 rounded-xl border transition-all text-xs font-bold ${editingColumn.type === t.id ? 'bg-cyan-500/10 border-primary-200 text-cyan-400 shadow-[0_0_15px_rgba(0,0,0,0.5)]' : 'glass-panel border-white/5 border-white/10 text-slate-400 hover:border-white/10'}`}
+                                                    >
+                                                        <t.icon className="h-4 w-4" />
+                                                        {t.label}
+                                                    </button>
+                                                ))}
                                             </div>
-                                            <div>
-                                                <h4 className="font-bold text-white">{col.label}</h4>
-                                                <div className="flex gap-2 text-[10px] font-bold uppercase tracking-wider">
-                                                    <span className="text-cyan-400 px-2 py-0.5 bg-cyan-500/10 rounded-full">{col.type}</span>
-                                                    {col.is_required && <span className="text-red-600 px-2 py-0.5 bg-red-50 rounded-full">Zorunlu</span>}
+                                        </div>
+
+                                        {editingColumn.type === 'geometry' && (
+                                            <div className="space-y-1 animate-in slide-in-from-top-2 duration-200">
+                                                <label className="text-[10px] font-bold text-slate-500 uppercase ml-1">Geometri Tipi</label>
+                                                <select
+                                                    value={editingColumn.config?.geom_type || 'Point'}
+                                                    onChange={(e) => setEditingColumn({ ...editingColumn, config: { ...editingColumn.config, geom_type: e.target.value } })}
+                                                    className="w-full bg-slate-900/50 text-slate-200 p-3 rounded-xl border border-white/10 focus:ring-2 focus:ring-cyan-500/50 outline-none text-xs font-bold"
+                                                >
+                                                    <option value="Point">Nokta (Point)</option>
+                                                    <option value="LineString">Çizgi (LineString)</option>
+                                                    <option value="Polygon">Poligon (Polygon)</option>
+                                                    <option value="MultiPoint">Çoklu Nokta (MultiPoint)</option>
+                                                    <option value="MultiLineString">Çoklu Çizgi (MultiLineString)</option>
+                                                    <option value="MultiPolygon">Çoklu Poligon (MultiPolygon)</option>
+                                                </select>
+                                            </div>
+                                        )}
+
+                                        {editingColumn.type === 'select' && (
+                                            <div className="space-y-3 animate-in slide-in-from-top-2 duration-200 p-4 bg-cyan-500/10/30 rounded-2xl border border-primary-100">
+                                                <div className="flex justify-between items-center">
+                                                    <label className="text-[10px] font-bold text-cyan-400 uppercase">Seçenek Listesi</label>
+                                                    <label className="flex items-center gap-1.5 px-3 py-1 glass-panel border-white/5 border border-primary-100 text-cyan-400 rounded-lg text-[10px] font-bold cursor-pointer hover:bg-cyan-500/10 transition-all shadow-[0_0_15px_rgba(0,0,0,0.5)]">
+                                                        <FileUp className="h-3 w-3" /> CSV Yükle
+                                                        <input
+                                                            type="file"
+                                                            accept=".csv"
+                                                            className="hidden"
+                                                            onChange={(e) => {
+                                                                const file = e.target.files?.[0];
+                                                                if (!file) return;
+                                                                const reader = new FileReader();
+                                                                reader.onload = (event) => {
+                                                                    const text = event.target?.result as string;
+                                                                    // Simple CSV parse (comma or semicolon)
+                                                                    const lines = text.split(/\r?\n/).filter(line => line.trim());
+                                                                    const newOptions = lines.map(line => {
+                                                                        const parts = line.includes(';') ? line.split(';') : line.split(',');
+                                                                        const val = parts[0].trim();
+                                                                        const lbl = parts[1] ? parts[1].trim() : val;
+                                                                        return { value: val, label: lbl };
+                                                                    }).filter(o => o.value);
+                                                                    setEditingColumn({
+                                                                        ...editingColumn,
+                                                                        options: [...(editingColumn.options || []), ...newOptions]
+                                                                    });
+                                                                };
+                                                                reader.readAsText(file);
+                                                            }}
+                                                        />
+                                                    </label>
+                                                </div>
+                                                <textarea
+                                                    rows={3}
+                                                    placeholder="Her satıra bir seçenek veya 'değer,etiket' yazın..."
+                                                    className="w-full glass-panel border-white/5 p-3 rounded-xl border border-primary-100 focus:ring-2 focus:ring-cyan-500/50 outline-none text-xs"
+                                                    onChange={(e) => {
+                                                        const text = e.target.value;
+                                                        setOptionsText(text);
+                                                        const lines = text.split('\n').filter(l => l.trim());
+                                                        const opts = lines.map(l => {
+                                                            const p = l.includes(',') ? l.split(',') : [l, l];
+                                                            return { value: p[0].trim(), label: p[1].trim() };
+                                                        });
+                                                        setEditingColumn({ ...editingColumn, options: opts });
+                                                    }}
+                                                    value={optionsText}
+                                                />
+                                                <div className="flex items-center gap-2 px-1">
+                                                    <input
+                                                        type="checkbox"
+                                                        id="allow_other"
+                                                        checked={editingColumn.config?.allow_other || false}
+                                                        onChange={(e) => setEditingColumn({
+                                                            ...editingColumn,
+                                                            config: { ...editingColumn.config, allow_other: e.target.checked }
+                                                        })}
+                                                        className="w-4 h-4 text-cyan-400 focus:ring-cyan-500/50 border-white/20 rounded"
+                                                    />
+                                                    <label htmlFor="allow_other" className="text-xs font-bold text-cyan-300 cursor-pointer">
+                                                        "Diğer" seçeneğine ve manuel girişe izin ver
+                                                    </label>
+                                                </div>
+                                                <p className="text-[9px] text-primary-400 italic font-medium">İpucu: Virgül ayraçlı veya satır bazlı giriş yapabilirsiniz.</p>
+                                            </div>
+                                        )}
+
+                                        <div className="flex items-center justify-between p-1">
+                                            <label className="flex items-center gap-2 font-bold text-xs text-slate-300 cursor-pointer">
+                                                <input type="checkbox" checked={editingColumn.is_required} onChange={(e) => setEditingColumn({ ...editingColumn, is_required: e.target.checked })} className="h-4 w-4 rounded border-white/20 text-cyan-400 focus:ring-cyan-500/50" />
+                                                Bu alan zorunlu olsun
+                                            </label>
+                                        </div>
+                                        <button type="submit" className="w-full bg-cyan-600 text-white p-4 rounded-2xl font-bold shadow-[0_0_15px_rgba(6,182,212,0.4)] hover:bg-cyan-500 active:scale-[0.98] transition-all mt-4 border-b-4 border-primary-800">
+                                            {editingColumn.id ? 'Değişiklikleri Kaydet' : 'Kolonu Oluştur'}
+                                        </button>
+                                    </form>
+                                </div>
+                            ) : (
+                                <>
+
+                                    <div className="flex justify-between items-center glass-panel border-white/5 p-6 rounded-3xl shadow-[0_0_15px_rgba(0,0,0,0.5)] border border-white/10">
+                                        <div>
+                                            <h3 className="text-xl font-bold text-white">Proje Tablosu</h3>
+                                            <p className="text-sm text-slate-400">Master veri yapısını tanımlayın.</p>
+                                        </div>
+                                        <button
+                                            onClick={() => {
+                                                setEditingColumn({ label: '', type: 'text', is_required: false, options: [], config: {} });
+                                                setOptionsText('');
+                                                setIsColumnModalOpen(true);
+                                            }}
+                                            className="flex items-center gap-2 bg-cyan-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-cyan-500 transition-all shadow-lg"
+                                        >
+                                            <Plus className="h-5 w-5" /> Kolon Ekle
+                                        </button>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 gap-3">
+                                        {columns.map(col => (
+                                            <div key={col.id} className="glass-panel border-white/5 p-5 rounded-2xl shadow-[0_0_15px_rgba(0,0,0,0.5)] border border-white/10 flex items-center justify-between group hover:border-primary-100 transition-all">
+                                                <div className="flex items-center gap-4">
+                                                    <div className="h-10 w-10 bg-slate-900/50 text-slate-200 rounded-xl flex items-center justify-center text-slate-500">
+                                                        <Table2 className="h-5 w-5" />
+                                                    </div>
+                                                    <div>
+                                                        <h4 className="font-bold text-white">{col.label}</h4>
+                                                        <div className="flex gap-2 text-[10px] font-bold uppercase tracking-wider">
+                                                            <span className="text-cyan-400 px-2 py-0.5 bg-cyan-500/10 rounded-full">{col.type}</span>
+                                                            {col.is_required && <span className="text-red-600 px-2 py-0.5 bg-red-50 rounded-full">Zorunlu</span>}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div className="flex items-center gap-2 transition-opacity">
+                                                    <button onClick={() => {
+                                                        setEditingColumn(col);
+                                                        setOptionsText(col.options?.map((o: any) => o.value === o.label ? o.value : `${o.value},${o.label}`).join('\n') || '');
+                                                        setIsColumnModalOpen(true);
+                                                    }} className="p-2 text-slate-500 hover:text-cyan-400 rounded-lg"><Settings className="h-4 w-4" /></button>
+                                                    <button onClick={() => handleDeleteColumn(col.id)} className="p-2 text-slate-500 hover:text-red-500 rounded-lg"><Trash2 className="h-4 w-4" /></button>
                                                 </div>
                                             </div>
-                                        </div>
-                                        <div className="flex items-center gap-2 transition-opacity">
-                                            <button onClick={() => {
-                                                setEditingColumn(col);
-                                                setOptionsText(col.options?.map((o: any) => o.value === o.label ? o.value : `${o.value},${o.label}`).join('\n') || '');
-                                                setIsColumnModalOpen(true);
-                                            }} className="p-2 text-slate-500 hover:text-cyan-400 rounded-lg"><Settings className="h-4 w-4" /></button>
-                                            <button onClick={() => handleDeleteColumn(col.id)} className="p-2 text-slate-500 hover:text-red-500 rounded-lg"><Trash2 className="h-4 w-4" /></button>
-                                        </div>
+                                        ))}
                                     </div>
-                                ))}
-                            </div>
+                                </>
+                            )}
                         </div>
                     )}
 
                     {activeTab === 'forms' && (
-                        <div className="max-w-4xl mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-300">
-                            <div className="flex justify-between items-center mb-6">
-                                <h3 className="text-xl font-bold text-white">Stakeholder Formları</h3>
-                                <button
-                                    onClick={() => { setEditingForm({ name: '', selected_columns: [] }); setIsFormModalOpen(true); }}
-                                    className="flex items-center gap-2 bg-cyan-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-cyan-500 transition-all shadow-lg"
-                                >
-                                    <Plus className="h-5 w-5" /> Yeni Form
-                                </button>
-                            </div>
-
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                {stakeholderForms.map(form => (
-                                    <div key={form.id} className="glass-panel border-white/5 p-6 rounded-3xl shadow-[0_0_15px_rgba(0,0,0,0.5)] border border-white/10 hover:border-primary-200 transition-all group relative">
-                                        <div className="mb-4">
-                                            <div className="h-10 w-10 bg-cyan-500/10 rounded-xl flex items-center justify-center text-cyan-400 mb-4">
-                                                <ClipboardList className="h-5 w-5" />
-                                            </div>
-                                            <h4 className="text-lg font-bold text-white">{form.name}</h4>
-                                            <p className="text-xs text-slate-500 mt-1">{form.selected_columns.length} Alan Seçili</p>
-                                        </div>
-                                        <div className="flex justify-between items-center mt-6 pt-4 border-t border-gray-50">
-                                            <button onClick={() => { setEditingForm(form); setIsFormModalOpen(true); }} className="text-xs font-bold text-cyan-400">Düzenle</button>
-                                            <Trash2 onClick={async (e) => {
-                                                e.stopPropagation();
-                                                if (confirm('Silmek istediğinize emin misiniz?')) {
-                                                    try {
-                                                        await api.delete(`/schema/forms/${form.id}`);
-                                                        fetchForms();
-                                                    } catch (err: any) {
-                                                        alert('Hata: ' + (err.response?.data?.detail || err.message));
-                                                    }
-                                                }
-                                            }} className="h-4 w-4 text-gray-300 hover:text-red-500 cursor-pointer" />
-                                        </div>
+                        <div className="w-[800px] max-w-full glass-panel border-white/5 rounded-3xl p-6 shadow-[0_0_30px_rgba(0,0,0,0.8)] backdrop-blur-2xl bg-slate-900/80 border border-white/10 space-y-6 pointer-events-auto h-fit absolute right-4 top-4 bottom-4 overflow-y-auto custom-scrollbar animate-in slide-in-from-right-8 duration-300">
+                            {isFormModalOpen ? (
+                                <div className="glass-panel border-white/5 w-full max-w-2xl mx-auto flex flex-col rounded-3xl shadow-2xl overflow-hidden">
+                                    <div className="p-6 border-b flex justify-between items-center bg-slate-900/50 text-slate-200">
+                                        <h3 className="font-bold">Form Tasarla</h3>
+                                        <button onClick={() => setIsFormModalOpen(false)} className="text-2xl font-bold">&times;</button>
                                     </div>
-                                ))}
-                            </div>
+                                    <form onSubmit={handleSaveForm} className="p-6 space-y-4">
+                                        <div className="space-y-1">
+                                            <label className="text-[10px] font-bold text-slate-500 uppercase ml-1">Form Adı</label>
+                                            <input required type="text" placeholder="Örn: Temel Bilgi Formu" value={editingForm.name} onChange={(e) => setEditingForm({ ...editingForm, name: e.target.value })} className="w-full bg-slate-900/50 text-slate-200 p-3 rounded-xl border border-white/10 focus:ring-2 focus:ring-cyan-500/50 outline-none" />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-[10px] font-bold text-slate-500 uppercase ml-1">Görünecek Alanlar</label>
+                                            <div className="max-h-48 overflow-y-auto space-y-2 bg-slate-900/50 text-slate-200 p-3 rounded-xl border border-white/10">
+                                                {columns.length === 0 ? (
+                                                    <p className="text-xs text-slate-500 text-center py-4">Önce Tablo sekmesinden kolon ekleyin.</p>
+                                                ) : (
+                                                    columns.map(col => (
+                                                        <label key={col.id} className="flex items-center gap-3 p-2 glass-panel border-white/5 rounded-lg border border-gray-50 hover:border-primary-100 cursor-pointer">
+                                                            <input type="checkbox" checked={editingForm.selected_columns?.includes(col.id)} onChange={(e) => {
+                                                                const sel = editingForm.selected_columns || [];
+                                                                setEditingForm({ ...editingForm, selected_columns: e.target.checked ? [...sel, col.id] : sel.filter((s: any) => s !== col.id) });
+                                                            }} className="h-4 w-4 rounded border-white/20 text-cyan-400 focus:ring-cyan-500/50" />
+                                                            <span className="text-sm font-medium">{col.label}</span>
+                                                        </label>
+                                                    ))
+                                                )}
+                                            </div>
+                                        </div>
+                                        <button type="submit" className="w-full bg-cyan-600 text-white p-4 rounded-2xl font-bold shadow-[0_0_15px_rgba(6,182,212,0.4)] hover:bg-cyan-500 transition-all mt-4">Kaydet</button>
+                                    </form>
+                                </div>
+                            ) : (
+                                <>
+
+                                    <div className="flex justify-between items-center mb-6">
+                                        <h3 className="text-xl font-bold text-white">Stakeholder Formları</h3>
+                                        <button
+                                            onClick={() => { setEditingForm({ name: '', selected_columns: [] }); setIsFormModalOpen(true); }}
+                                            className="flex items-center gap-2 bg-cyan-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-cyan-500 transition-all shadow-lg"
+                                        >
+                                            <Plus className="h-5 w-5" /> Yeni Form
+                                        </button>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        {stakeholderForms.map(form => (
+                                            <div key={form.id} className="glass-panel border-white/5 p-6 rounded-3xl shadow-[0_0_15px_rgba(0,0,0,0.5)] border border-white/10 hover:border-primary-200 transition-all group relative">
+                                                <div className="mb-4">
+                                                    <div className="h-10 w-10 bg-cyan-500/10 rounded-xl flex items-center justify-center text-cyan-400 mb-4">
+                                                        <ClipboardList className="h-5 w-5" />
+                                                    </div>
+                                                    <h4 className="text-lg font-bold text-white">{form.name}</h4>
+                                                    <p className="text-xs text-slate-500 mt-1">{form.selected_columns.length} Alan Seçili</p>
+                                                </div>
+                                                <div className="flex justify-between items-center mt-6 pt-4 border-t border-gray-50">
+                                                    <button onClick={() => { setEditingForm(form); setIsFormModalOpen(true); }} className="text-xs font-bold text-cyan-400">Düzenle</button>
+                                                    <Trash2 onClick={async (e) => {
+                                                        e.stopPropagation();
+                                                        if (confirm('Silmek istediğinize emin misiniz?')) {
+                                                            try {
+                                                                await api.delete(`/schema/forms/${form.id}`);
+                                                                fetchForms();
+                                                            } catch (err: any) {
+                                                                alert('Hata: ' + (err.response?.data?.detail || err.message));
+                                                            }
+                                                        }
+                                                    }} className="h-4 w-4 text-gray-300 hover:text-red-500 cursor-pointer" />
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </>
+                            )}
                         </div>
                     )}
 
                     {activeTab === 'stakeholders' && (
-                        <div className="max-w-4xl mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-300">
+                        <div className="w-[900px] max-w-full glass-panel border-white/5 rounded-3xl p-6 shadow-[0_0_30px_rgba(0,0,0,0.8)] backdrop-blur-2xl bg-slate-900/80 border border-white/10 space-y-6 pointer-events-auto h-fit absolute right-4 top-4 bottom-4 overflow-y-auto custom-scrollbar animate-in slide-in-from-right-8 duration-300">
                             <div className="glass-panel border-white/5 p-6 rounded-3xl shadow-[0_0_15px_rgba(0,0,0,0.5)] border border-white/10 flex justify-between items-center">
                                 <div>
                                     <h3 className="text-xl font-bold text-white">Paydaş Atamaları</h3>
@@ -1043,31 +1231,42 @@ const ProjectDetails: React.FC = () => {
                                     const assignedFormId = assignment?.form_id;
 
                                     return (
-                                        <div key={user.id} className="glass-panel border-white/5 p-6 rounded-2xl shadow-[0_0_15px_rgba(0,0,0,0.5)] border border-white/10 flex items-center justify-between group hover:border-primary-100 transition-all">
-                                            <div className="flex items-center gap-4">
-                                                <div className="h-12 w-12 bg-slate-900/50 text-slate-200 rounded-full flex items-center justify-center text-slate-500 border border-white/10">
-                                                    <UserCheck className="h-6 w-6" />
-                                                </div>
-                                                <div>
-                                                    <h4 className="font-bold text-white">{user.first_name || user.username} {user.last_name || ''}</h4>
-                                                    <p className="text-xs text-slate-500">{user.email || user.username}</p>
-                                                </div>
-                                            </div>
+                                        <div key={user.id} className={`glass-panel border-white/5 p-5 rounded-2xl shadow-[0_0_20px_rgba(0,0,0,0.5)] border transition-all relative overflow-hidden group ${assignedFormId ? 'bg-cyan-900/20 border-cyan-500/30' : 'bg-slate-900/50 border-white/10 hover:border-cyan-500/30'}`}>
+                                            {/* Decorative background glow if assigned */}
+                                            {assignedFormId && <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-500/10 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none"></div>}
 
-                                            <div className="flex items-center gap-4">
-                                                {assignment && (
-                                                    <div className="text-green-600" title="Atandı"><CheckCircle2 className="h-5 w-5" /></div>
-                                                )}
-                                                <select
-                                                    className="bg-slate-900/50 text-slate-200 border border-white/10 px-4 py-2 rounded-xl text-xs font-bold focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
-                                                    value={assignedFormId || ''}
-                                                    onChange={(e) => handleAssignForm(user.id, e.target.value)}
-                                                >
-                                                    <option value="">Form Seçin...</option>
-                                                    {stakeholderForms.map(f => (
-                                                        <option key={f.id} value={f.id}>{f.name}</option>
-                                                    ))}
-                                                </select>
+                                            <div className="flex flex-col gap-4 relative z-10">
+                                                <div className="flex items-center gap-4">
+                                                    <div className={`h-12 w-12 rounded-2xl flex items-center justify-center border shadow-inner ${assignedFormId ? 'bg-cyan-500/20 border-cyan-500/30 text-cyan-400' : 'bg-slate-800 border-white/10 text-slate-500'}`}>
+                                                        <UserCheck className="h-6 w-6" />
+                                                    </div>
+                                                    <div className="flex-1">
+                                                        <h4 className="font-bold text-white tracking-wide">{user.first_name || user.username} {user.last_name || ''}</h4>
+                                                        <p className="text-xs text-slate-500 font-medium">{user.email || user.username}</p>
+                                                    </div>
+                                                    {assignedFormId && (
+                                                        <div className="bg-cyan-500/10 text-cyan-400 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border border-cyan-500/20 shadow-[0_0_10px_rgba(6,182,212,0.2)] flex items-center gap-1">
+                                                            <CheckCircle2 className="h-3 w-3" />
+                                                            Aktif Görev
+                                                        </div>
+                                                    )}
+                                                </div>
+
+                                                <div className="bg-slate-950/50 p-3 rounded-xl border border-white/5 mt-2 flex items-center justify-between gap-4">
+                                                    <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest pl-1">
+                                                        Yetkilendirme Formu
+                                                    </div>
+                                                    <select
+                                                        className="bg-slate-900 text-cyan-50 text-xs font-bold px-3 py-2 rounded-lg border border-white/10 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50 transition-all cursor-pointer hover:bg-slate-800"
+                                                        value={assignedFormId || ''}
+                                                        onChange={(e) => handleAssignForm(user.id, e.target.value)}
+                                                    >
+                                                        <option value="">Form Seçin...</option>
+                                                        {stakeholderForms.map(f => (
+                                                            <option key={f.id} value={f.id}>{f.name}</option>
+                                                        ))}
+                                                    </select>
+                                                </div>
                                             </div>
                                         </div>
                                     );
@@ -1077,7 +1276,7 @@ const ProjectDetails: React.FC = () => {
                     )}
 
                     {activeTab === 'data' && (
-                        <div className="flex-1 flex flex-col min-h-0 glass-panel border-white/5 rounded-3xl overflow-hidden border border-white/10 shadow-[0_0_15px_rgba(0,0,0,0.5)] animate-in fade-in duration-300">
+                        <div className="w-[800px] max-w-full glass-panel border-white/5 rounded-3xl shadow-[0_0_30px_rgba(0,0,0,0.8)] backdrop-blur-2xl bg-slate-900/90 border border-white/10 flex flex-col pointer-events-auto absolute right-4 top-4 bottom-4 overflow-hidden animate-in slide-in-from-right-8 duration-300">
                             {/* Toolbar */}
                             <div className="p-4 border-b border-white/10 flex flex-wrap items-center justify-between gap-4 bg-slate-950/50 text-slate-200">
                                 <div className="flex items-center gap-4 flex-1 min-w-[300px]">
@@ -1133,8 +1332,8 @@ const ProjectDetails: React.FC = () => {
                                 )}
                             </div>
 
-                            {/* Top: Records Table */}
-                            <div className="flex-1 overflow-auto border-b border-white/10 min-h-[300px]">
+                            {/* Records Table */}
+                            <div className="flex-1 overflow-auto custom-scrollbar">
                                 <table className="w-full text-left border-collapse">
                                     <thead className="sticky top-0 glass-panel border-white/5 z-10 border-b border-white/10 shadow-[0_0_15px_rgba(0,0,0,0.5)]">
                                         <tr>
@@ -1249,276 +1448,12 @@ const ProjectDetails: React.FC = () => {
                                     </tbody>
                                 </table>
                             </div>
-
-                            {/* Bottom: Split View (Map + Details) */}
-                            <div className="h-1/2 flex border-t-4 border-gray-50">
-                                {/* Bottom Left: Map (3/4) */}
-                                <div className="flex-[3] relative bg-slate-800">
-                                    <MapContainer
-                                        projectId={id}
-                                        areaId={selectedAreaId || undefined}
-                                        fitTrigger={fitTrigger}
-                                        autoZoom={true}
-                                        {...(() => {
-                                            // Debug log to see what's being passed (visible in dev console)
-                                            const activeResponse = selectedResponse || (selectedResponseIds.size > 0
-                                                ? responses.find((r: any) => r.id === Array.from(selectedResponseIds)[0])
-                                                : null);
-
-                                            if (activeResponse?.response_data) {
-                                                // Find any field that looks like geometry or contains h3_indices
-                                                const geomEntry = Object.entries(activeResponse.response_data).find(([_, v]: [string, any]) =>
-                                                    v && (v.type === 'GridSelection' || v.type || v.coordinates || v.features)
-                                                );
-
-                                                if (geomEntry) {
-                                                    const [_, geomData] = geomEntry as [string, any];
-
-                                                    if (geomData.type === 'GridSelection') {
-                                                        return { selectedCells: geomData.h3_indices || [] };
-                                                    }
-                                                    // Handle FeatureCollection or Feature by extracting geometry
-                                                    if (geomData.type === 'FeatureCollection' && geomData.features?.length > 0) {
-                                                        return { initialGeometry: geomData.features[0].geometry };
-                                                    }
-                                                    if (geomData.type === 'Feature') {
-                                                        return { initialGeometry: geomData.geometry };
-                                                    }
-                                                    return { initialGeometry: geomData };
-                                                }
-                                            }
-                                            return {};
-                                        })()}
-                                    />
-                                    {selectedResponseIds.size === 0 && (
-                                        <div className="absolute inset-0 bg-slate-800/50 backdrop-blur-[1px] flex items-center justify-center z-10">
-                                            <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">Görselleştirmek için checkbox ile kayıt seçin</p>
-                                        </div>
-                                    )}
-                                    {selectedResponseIds.size > 0 && (
-                                        <div className="absolute top-3 left-3 bg-cyan-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold z-10">
-                                            {selectedResponseIds.size} kayıt seçili
-                                        </div>
-                                    )}
-
-                                    <button
-                                        onClick={() => setFitTrigger(prev => prev + 1)}
-                                        className="absolute top-3 right-3 glass-panel border-white/5/90 backdrop-blur-md px-3 py-2 rounded-xl text-cyan-400 font-bold text-xs shadow-lg border border-primary-50 hover:bg-white/5 transition-all flex items-center gap-2 z-10"
-                                        title="Seçili verilere odakla"
-                                    >
-                                        <MapPin className="h-4 w-4" />
-                                        Odakla
-                                    </button>
-                                </div>
-
-                                {/* Bottom Right: Details (1/4) */}
-                                <div className="flex-1 glass-panel border-white/5 border-l border-white/10 flex flex-col min-h-0 overflow-y-auto p-6 scrollbar-hide">
-                                    <h4 className="text-xs font-black text-slate-500 uppercase tracking-widest mb-6 border-b border-gray-50 pb-2">Kayıt Detayları</h4>
-                                    {selectedResponse ? (
-                                        <div className="space-y-4">
-                                            {Object.entries(selectedResponse.response_data || {}).map(([key, value]: [string, any]) => (
-                                                <div key={key} className="space-y-1">
-                                                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-tighter">{key}</label>
-                                                    <div className="text-sm font-semibold text-slate-200 bg-slate-900/50 text-slate-200 p-3 rounded-xl border border-white/10">
-                                                        {typeof value === 'object' ? (value.type ? `Geometri: ${value.type}` : JSON.stringify(value)) : String(value)}
-                                                    </div>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    ) : (
-                                        <div className="flex-1 flex items-center justify-center text-center px-4">
-                                            <p className="text-xs text-slate-500 italic">Yukarıdaki tablodan bir satıra tıklayarak detayları görüntüleyebilirsiniz.</p>
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
                         </div>
                     )}
                 </div>
+            </div >
 
-                {/* Modals */}
-                {
-                    isColumnModalOpen && (
-                        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-sm animate-in fade-in">
-                            <div className="glass-panel border-white/5 w-full max-w-md rounded-3xl shadow-2xl overflow-hidden">
-                                <div className="p-6 border-b flex justify-between items-center bg-slate-900/50 text-slate-200">
-                                    <h3 className="font-bold flex items-center gap-2">
-                                        <Database className="h-4 w-4 text-cyan-400" />
-                                        Kolon Tanımla
-                                    </h3>
-                                    <button onClick={() => setIsColumnModalOpen(false)} className="text-slate-500 hover:text-slate-300 text-2xl font-bold">&times;</button>
-                                </div>
-                                <form onSubmit={handleSaveColumn} className="p-6 space-y-4 max-h-[80vh] overflow-y-auto custom-scrollbar">
-                                    <div className="space-y-1">
-                                        <label className="text-[10px] font-bold text-slate-500 uppercase ml-1">Görünür Başlık</label>
-                                        <input required type="text" placeholder="Örn: Yaş, Şehir, Notlar" value={editingColumn.label} onChange={(e) => setEditingColumn({ ...editingColumn, label: e.target.value })} className="w-full bg-slate-900/50 text-slate-200 p-3 rounded-xl border border-white/10 focus:ring-2 focus:ring-cyan-500/50 outline-none font-medium placeholder:text-gray-300 transition-all" />
-                                    </div>
-                                    <div className="space-y-1">
-                                        <label className="text-[10px] font-bold text-slate-500 uppercase ml-1">Veri Tipi</label>
-                                        <div className="grid grid-cols-2 gap-2">
-                                            {[
-                                                { id: 'text', label: 'Metin', icon: Type },
-                                                { id: 'number', label: 'Sayı', icon: Hash },
-                                                { id: 'date', label: 'Tarih', icon: Calendar },
-                                                { id: 'rating', label: 'Puan (1-5)', icon: Star },
-                                                { id: 'select', label: 'Liste', icon: ListFilter },
-                                                { id: 'geometry', label: 'Geometri', icon: MapPin },
-                                                { id: 'file', label: 'Dosya (PDF/JPG)', icon: FileCode },
-                                            ].map(t => (
-                                                <button
-                                                    key={t.id}
-                                                    type="button"
-                                                    onClick={() => setEditingColumn({ ...editingColumn, type: t.id, config: t.id === 'geometry' ? { geom_type: 'Point' } : (t.id === 'file' ? { allowed_types: ['pdf', 'jpg'] } : {}) })}
-                                                    className={`flex items-center gap-2 p-3 rounded-xl border transition-all text-xs font-bold ${editingColumn.type === t.id ? 'bg-cyan-500/10 border-primary-200 text-cyan-400 shadow-[0_0_15px_rgba(0,0,0,0.5)]' : 'glass-panel border-white/5 border-white/10 text-slate-400 hover:border-white/10'}`}
-                                                >
-                                                    <t.icon className="h-4 w-4" />
-                                                    {t.label}
-                                                </button>
-                                            ))}
-                                        </div>
-                                    </div>
-
-                                    {editingColumn.type === 'geometry' && (
-                                        <div className="space-y-1 animate-in slide-in-from-top-2 duration-200">
-                                            <label className="text-[10px] font-bold text-slate-500 uppercase ml-1">Geometri Tipi</label>
-                                            <select
-                                                value={editingColumn.config?.geom_type || 'Point'}
-                                                onChange={(e) => setEditingColumn({ ...editingColumn, config: { ...editingColumn.config, geom_type: e.target.value } })}
-                                                className="w-full bg-slate-900/50 text-slate-200 p-3 rounded-xl border border-white/10 focus:ring-2 focus:ring-cyan-500/50 outline-none text-xs font-bold"
-                                            >
-                                                <option value="Point">Nokta (Point)</option>
-                                                <option value="LineString">Çizgi (LineString)</option>
-                                                <option value="Polygon">Poligon (Polygon)</option>
-                                                <option value="MultiPoint">Çoklu Nokta (MultiPoint)</option>
-                                                <option value="MultiLineString">Çoklu Çizgi (MultiLineString)</option>
-                                                <option value="MultiPolygon">Çoklu Poligon (MultiPolygon)</option>
-                                            </select>
-                                        </div>
-                                    )}
-
-                                    {editingColumn.type === 'select' && (
-                                        <div className="space-y-3 animate-in slide-in-from-top-2 duration-200 p-4 bg-cyan-500/10/30 rounded-2xl border border-primary-100">
-                                            <div className="flex justify-between items-center">
-                                                <label className="text-[10px] font-bold text-cyan-400 uppercase">Seçenek Listesi</label>
-                                                <label className="flex items-center gap-1.5 px-3 py-1 glass-panel border-white/5 border border-primary-100 text-cyan-400 rounded-lg text-[10px] font-bold cursor-pointer hover:bg-cyan-500/10 transition-all shadow-[0_0_15px_rgba(0,0,0,0.5)]">
-                                                    <FileUp className="h-3 w-3" /> CSV Yükle
-                                                    <input
-                                                        type="file"
-                                                        accept=".csv"
-                                                        className="hidden"
-                                                        onChange={(e) => {
-                                                            const file = e.target.files?.[0];
-                                                            if (!file) return;
-                                                            const reader = new FileReader();
-                                                            reader.onload = (event) => {
-                                                                const text = event.target?.result as string;
-                                                                // Simple CSV parse (comma or semicolon)
-                                                                const lines = text.split(/\r?\n/).filter(line => line.trim());
-                                                                const newOptions = lines.map(line => {
-                                                                    const parts = line.includes(';') ? line.split(';') : line.split(',');
-                                                                    const val = parts[0].trim();
-                                                                    const lbl = parts[1] ? parts[1].trim() : val;
-                                                                    return { value: val, label: lbl };
-                                                                }).filter(o => o.value);
-                                                                setEditingColumn({
-                                                                    ...editingColumn,
-                                                                    options: [...(editingColumn.options || []), ...newOptions]
-                                                                });
-                                                            };
-                                                            reader.readAsText(file);
-                                                        }}
-                                                    />
-                                                </label>
-                                            </div>
-                                            <textarea
-                                                rows={3}
-                                                placeholder="Her satıra bir seçenek veya 'değer,etiket' yazın..."
-                                                className="w-full glass-panel border-white/5 p-3 rounded-xl border border-primary-100 focus:ring-2 focus:ring-cyan-500/50 outline-none text-xs"
-                                                onChange={(e) => {
-                                                    const text = e.target.value;
-                                                    setOptionsText(text);
-                                                    const lines = text.split('\n').filter(l => l.trim());
-                                                    const opts = lines.map(l => {
-                                                        const p = l.includes(',') ? l.split(',') : [l, l];
-                                                        return { value: p[0].trim(), label: p[1].trim() };
-                                                    });
-                                                    setEditingColumn({ ...editingColumn, options: opts });
-                                                }}
-                                                value={optionsText}
-                                            />
-                                            <div className="flex items-center gap-2 px-1">
-                                                <input
-                                                    type="checkbox"
-                                                    id="allow_other"
-                                                    checked={editingColumn.config?.allow_other || false}
-                                                    onChange={(e) => setEditingColumn({
-                                                        ...editingColumn,
-                                                        config: { ...editingColumn.config, allow_other: e.target.checked }
-                                                    })}
-                                                    className="w-4 h-4 text-cyan-400 focus:ring-cyan-500/50 border-white/20 rounded"
-                                                />
-                                                <label htmlFor="allow_other" className="text-xs font-bold text-cyan-300 cursor-pointer">
-                                                    "Diğer" seçeneğine ve manuel girişe izin ver
-                                                </label>
-                                            </div>
-                                            <p className="text-[9px] text-primary-400 italic font-medium">İpucu: Virgül ayraçlı veya satır bazlı giriş yapabilirsiniz.</p>
-                                        </div>
-                                    )}
-
-                                    <div className="flex items-center justify-between p-1">
-                                        <label className="flex items-center gap-2 font-bold text-xs text-slate-300 cursor-pointer">
-                                            <input type="checkbox" checked={editingColumn.is_required} onChange={(e) => setEditingColumn({ ...editingColumn, is_required: e.target.checked })} className="h-4 w-4 rounded border-white/20 text-cyan-400 focus:ring-cyan-500/50" />
-                                            Bu alan zorunlu olsun
-                                        </label>
-                                    </div>
-                                    <button type="submit" className="w-full bg-cyan-600 text-white p-4 rounded-2xl font-bold shadow-[0_0_15px_rgba(6,182,212,0.4)] hover:bg-cyan-500 active:scale-[0.98] transition-all mt-4 border-b-4 border-primary-800">
-                                        {editingColumn.id ? 'Değişiklikleri Kaydet' : 'Kolonu Oluştur'}
-                                    </button>
-                                </form>
-                            </div>
-                        </div>
-                    )
-                }
-
-                {
-                    isFormModalOpen && (
-                        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-sm animate-in fade-in">
-                            <div className="glass-panel border-white/5 w-full max-w-md rounded-3xl shadow-2xl overflow-hidden">
-                                <div className="p-6 border-b flex justify-between items-center bg-slate-900/50 text-slate-200">
-                                    <h3 className="font-bold">Form Tasarla</h3>
-                                    <button onClick={() => setIsFormModalOpen(false)} className="text-2xl font-bold">&times;</button>
-                                </div>
-                                <form onSubmit={handleSaveForm} className="p-6 space-y-4">
-                                    <div className="space-y-1">
-                                        <label className="text-[10px] font-bold text-slate-500 uppercase ml-1">Form Adı</label>
-                                        <input required type="text" placeholder="Örn: Temel Bilgi Formu" value={editingForm.name} onChange={(e) => setEditingForm({ ...editingForm, name: e.target.value })} className="w-full bg-slate-900/50 text-slate-200 p-3 rounded-xl border border-white/10 focus:ring-2 focus:ring-cyan-500/50 outline-none" />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <label className="text-[10px] font-bold text-slate-500 uppercase ml-1">Görünecek Alanlar</label>
-                                        <div className="max-h-48 overflow-y-auto space-y-2 bg-slate-900/50 text-slate-200 p-3 rounded-xl border border-white/10">
-                                            {columns.length === 0 ? (
-                                                <p className="text-xs text-slate-500 text-center py-4">Önce Tablo sekmesinden kolon ekleyin.</p>
-                                            ) : (
-                                                columns.map(col => (
-                                                    <label key={col.id} className="flex items-center gap-3 p-2 glass-panel border-white/5 rounded-lg border border-gray-50 hover:border-primary-100 cursor-pointer">
-                                                        <input type="checkbox" checked={editingForm.selected_columns?.includes(col.id)} onChange={(e) => {
-                                                            const sel = editingForm.selected_columns || [];
-                                                            setEditingForm({ ...editingForm, selected_columns: e.target.checked ? [...sel, col.id] : sel.filter((s: any) => s !== col.id) });
-                                                        }} className="h-4 w-4 rounded border-white/20 text-cyan-400 focus:ring-cyan-500/50" />
-                                                        <span className="text-sm font-medium">{col.label}</span>
-                                                    </label>
-                                                ))
-                                            )}
-                                        </div>
-                                    </div>
-                                    <button type="submit" className="w-full bg-cyan-600 text-white p-4 rounded-2xl font-bold shadow-[0_0_15px_rgba(6,182,212,0.4)] hover:bg-cyan-500 transition-all mt-4">Kaydet</button>
-                                </form>
-                            </div>
-                        </div>
-                    )
-                }
-            </div>
-
+            {/* Modals */}
             {/* Grid Regeneration Warning Modal */}
             {
                 showAreaDataWarning && (
@@ -1559,105 +1494,108 @@ const ProjectDetails: React.FC = () => {
                             </div>
                         </div>
                     </div>
-                )}
+                )
+            }
 
             {/* Edit Response Modal */}
-            {isEditingModalOpen && editingResponse && (
-                <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-sm animate-in fade-in">
-                    <div className="glass-panel border-white/5 w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
-                        <div className="p-6 border-b flex justify-between items-center bg-slate-900/50 text-slate-200 shrink-0">
-                            <div className="flex items-center gap-2">
-                                <div className="h-8 w-8 bg-cyan-500/20 border border-cyan-500/30 text-cyan-400 rounded-lg flex items-center justify-center">
-                                    <Edit className="h-4 w-4" />
-                                </div>
-                                <h3 className="font-bold text-white">Kaydı Düzenle</h3>
-                            </div>
-                            <button onClick={() => setIsEditingModalOpen(false)} className="text-slate-500 hover:text-slate-300 text-2xl font-bold p-2">&times;</button>
-                        </div>
-
-                        <form onSubmit={handleUpdateResponse} className="flex-1 overflow-y-auto p-6 space-y-6 scrollbar-hide">
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-1">
-                                    <label className="text-[10px] font-bold text-slate-500 uppercase ml-1">Kullanıcı</label>
-                                    <div className="bg-slate-900/50 text-slate-200 p-3 rounded-xl border border-white/10 text-sm font-medium text-slate-400">
-                                        User_{editingResponse.user_id}
+            {
+                isEditingModalOpen && editingResponse && (
+                    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-sm animate-in fade-in">
+                        <div className="glass-panel border-white/5 w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+                            <div className="p-6 border-b flex justify-between items-center bg-slate-900/50 text-slate-200 shrink-0">
+                                <div className="flex items-center gap-2">
+                                    <div className="h-8 w-8 bg-cyan-500/20 border border-cyan-500/30 text-cyan-400 rounded-lg flex items-center justify-center">
+                                        <Edit className="h-4 w-4" />
                                     </div>
+                                    <h3 className="font-bold text-white">Kaydı Düzenle</h3>
                                 </div>
-                                <div className="space-y-1">
-                                    <label className="text-[10px] font-bold text-slate-500 uppercase ml-1">Hücre ID</label>
-                                    <div className="bg-slate-900/50 text-slate-200 p-3 rounded-xl border border-white/10 text-sm font-mono text-slate-400">
-                                        {editingResponse.h3_index || '-'}
-                                    </div>
-                                </div>
+                                <button onClick={() => setIsEditingModalOpen(false)} className="text-slate-500 hover:text-slate-300 text-2xl font-bold p-2">&times;</button>
                             </div>
 
-                            <div className="space-y-4">
-                                <div className="flex items-center justify-between border-b border-white/10 pb-2">
-                                    <h4 className="text-xs font-black text-slate-500 uppercase tracking-widest">Veri İçeriği</h4>
+                            <form onSubmit={handleUpdateResponse} className="flex-1 overflow-y-auto p-6 space-y-6 scrollbar-hide">
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-1">
+                                        <label className="text-[10px] font-bold text-slate-500 uppercase ml-1">Kullanıcı</label>
+                                        <div className="bg-slate-900/50 text-slate-200 p-3 rounded-xl border border-white/10 text-sm font-medium text-slate-400">
+                                            User_{editingResponse.user_id}
+                                        </div>
+                                    </div>
+                                    <div className="space-y-1">
+                                        <label className="text-[10px] font-bold text-slate-500 uppercase ml-1">Hücre ID</label>
+                                        <div className="bg-slate-900/50 text-slate-200 p-3 rounded-xl border border-white/10 text-sm font-mono text-slate-400">
+                                            {editingResponse.h3_index || '-'}
+                                        </div>
+                                    </div>
                                 </div>
 
-                                {Object.entries(editingResponse.response_data || {}).map(([key, value]: [string, any]) => (
-                                    <div key={key} className="space-y-1">
-                                        <label className="text-[10px] font-bold text-slate-400 uppercase ml-1">{key}</label>
-                                        {typeof value === 'object' && value !== null ? (
-                                            <textarea
-                                                className="w-full bg-slate-900/50 text-slate-200 p-3 rounded-xl border border-white/10 focus:ring-2 focus:ring-cyan-500/50 outline-none text-xs font-mono"
-                                                rows={4}
-                                                value={JSON.stringify(value, null, 2)}
-                                                onChange={(e) => {
-                                                    try {
-                                                        const parsed = JSON.parse(e.target.value);
+                                <div className="space-y-4">
+                                    <div className="flex items-center justify-between border-b border-white/10 pb-2">
+                                        <h4 className="text-xs font-black text-slate-500 uppercase tracking-widest">Veri İçeriği</h4>
+                                    </div>
+
+                                    {Object.entries(editingResponse.response_data || {}).map(([key, value]: [string, any]) => (
+                                        <div key={key} className="space-y-1">
+                                            <label className="text-[10px] font-bold text-slate-400 uppercase ml-1">{key}</label>
+                                            {typeof value === 'object' && value !== null ? (
+                                                <textarea
+                                                    className="w-full bg-slate-900/50 text-slate-200 p-3 rounded-xl border border-white/10 focus:ring-2 focus:ring-cyan-500/50 outline-none text-xs font-mono"
+                                                    rows={4}
+                                                    value={JSON.stringify(value, null, 2)}
+                                                    onChange={(e) => {
+                                                        try {
+                                                            const parsed = JSON.parse(e.target.value);
+                                                            setEditingResponse({
+                                                                ...editingResponse,
+                                                                response_data: {
+                                                                    ...editingResponse.response_data,
+                                                                    [key]: parsed
+                                                                }
+                                                            });
+                                                        } catch (err) {
+                                                            // Just update text for now, but user will get error on submit if invalid
+                                                        }
+                                                    }}
+                                                />
+                                            ) : (
+                                                <input
+                                                    type="text"
+                                                    className="w-full bg-slate-900/50 text-slate-200 p-3 rounded-xl border border-white/10 focus:ring-2 focus:ring-cyan-500/50 outline-none text-sm font-medium"
+                                                    value={String(value)}
+                                                    onChange={(e) => {
                                                         setEditingResponse({
                                                             ...editingResponse,
                                                             response_data: {
                                                                 ...editingResponse.response_data,
-                                                                [key]: parsed
+                                                                [key]: e.target.value
                                                             }
                                                         });
-                                                    } catch (err) {
-                                                        // Just update text for now, but user will get error on submit if invalid
-                                                    }
-                                                }}
-                                            />
-                                        ) : (
-                                            <input
-                                                type="text"
-                                                className="w-full bg-slate-900/50 text-slate-200 p-3 rounded-xl border border-white/10 focus:ring-2 focus:ring-cyan-500/50 outline-none text-sm font-medium"
-                                                value={String(value)}
-                                                onChange={(e) => {
-                                                    setEditingResponse({
-                                                        ...editingResponse,
-                                                        response_data: {
-                                                            ...editingResponse.response_data,
-                                                            [key]: e.target.value
-                                                        }
-                                                    });
-                                                }}
-                                            />
-                                        )}
-                                    </div>
-                                ))}
-                            </div>
-                        </form>
+                                                    }}
+                                                />
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+                            </form>
 
-                        <div className="p-6 border-t bg-slate-900/50 text-slate-200 flex gap-3 shrink-0">
-                            <button
-                                type="button"
-                                onClick={() => setIsEditingModalOpen(false)}
-                                className="flex-1 px-4 py-3 glass-panel border-white/5 border border-white/10 text-slate-300 rounded-xl font-bold hover:bg-slate-800 transition-all"
-                            >
-                                Vazgeç
-                            </button>
-                            <button
-                                onClick={handleUpdateResponse}
-                                className="flex-[2] px-4 py-3 bg-cyan-600 text-white rounded-xl font-bold shadow-[0_0_15px_rgba(6,182,212,0.4)] hover:bg-cyan-500 transition-all active:scale-95"
-                            >
-                                Değişiklikleri Kaydet
-                            </button>
+                            <div className="p-6 border-t bg-slate-900/50 text-slate-200 flex gap-3 shrink-0">
+                                <button
+                                    type="button"
+                                    onClick={() => setIsEditingModalOpen(false)}
+                                    className="flex-1 px-4 py-3 glass-panel border-white/5 border border-white/10 text-slate-300 rounded-xl font-bold hover:bg-slate-800 transition-all"
+                                >
+                                    Vazgeç
+                                </button>
+                                <button
+                                    onClick={handleUpdateResponse}
+                                    className="flex-[2] px-4 py-3 bg-cyan-600 text-white rounded-xl font-bold shadow-[0_0_15px_rgba(6,182,212,0.4)] hover:bg-cyan-500 transition-all active:scale-95"
+                                >
+                                    Değişiklikleri Kaydet
+                                </button>
+                            </div>
                         </div>
                     </div>
-                </div>
-            )}
+                )
+            }
         </>
     );
 };

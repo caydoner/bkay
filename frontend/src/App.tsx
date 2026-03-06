@@ -4,7 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from 'react-hot-toast';
 import Login from './pages/Login';
 import Register from './pages/Register';
-import AdminDashboard from './pages/admin/Dashboard';
+import AdminProjects from './pages/admin/Projects';
 import PublicDashboard from './pages/public/Dashboard';
 import ProjectDetails from './pages/admin/ProjectDetails';
 import AdminMap from './pages/admin/AdminMap';
@@ -45,7 +45,7 @@ function App() {
             <Routes>
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
-              <Route path="/admin" element={<AdminDashboard />} />
+              <Route path="/admin" element={<AdminProjects />} />
               <Route path="/admin/project/:id" element={<ProjectDetails />} />
               <Route path="/admin/users" element={<AdminUsers />} />
               <Route path="/admin/map" element={<AdminMap />} />
