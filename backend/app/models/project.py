@@ -11,6 +11,7 @@ class Project(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, server_default=func.gen_random_uuid())
     name = Column(String, nullable=False)
     description = Column(String)
+    status = Column(String, default="IN_PROGRESS")
     boundary_geom = Column(Geometry('GEOMETRY', srid=4326))  # Legacy - will migrate to areas
     config = Column(JSONB, default={})
     created_at = Column(DateTime(timezone=True), server_default=func.now())

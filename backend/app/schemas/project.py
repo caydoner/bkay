@@ -6,6 +6,7 @@ from datetime import datetime
 class ProjectBase(BaseModel):
     name: str
     description: Optional[str] = None
+    status: Optional[str] = "IN_PROGRESS"
     boundary_geom: Optional[Dict[str, Any]] = None
     config: Optional[Dict[str, Any]] = {}
 

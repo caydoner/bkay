@@ -11,15 +11,17 @@ import {
     Clock,
     X,
     FolderPlus,
-    Shield
+    Shield,
+    Settings
 } from 'lucide-react';
 
 const AdminProjects: React.FC = () => {
     const [projects, setProjects] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [newProject, setNewProject] = useState({ name: '', description: '' });
-    const [creating, setCreating] = useState(false);
+    const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+    const [editingProject, setEditingProject] = useState<any | null>(null);
+    const [projectForm, setProjectForm] = useState({ name: '', description: '', status: 'IN_PROGRESS' });
+    const [saving, setSaving] = useState(false);
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -38,19 +40,39 @@ const AdminProjects: React.FC = () => {
         }
     };
 
-    const handleCreateProject = async (e: React.FormEvent) => {
+    const handleSaveProject = async (e: React.FormEvent) => {
         e.preventDefault();
-        setCreating(true);
+        setSaving(true);
         try {
-            await api.post('/projects/', newProject);
-            setIsModalOpen(false);
-            setNewProject({ name: '', description: '' });
+            if (editingProject) {
+                await api.patch(`/projects/${editingProject.id}`, projectForm);
+                setEditingProject(null);
+            } else {
+                await api.post('/projects/', projectForm);
+                setIsCreateModalOpen(false);
+            }
+            setProjectForm({ name: '', description: '', status: 'IN_PROGRESS' });
             fetchProjects();
         } catch (err: any) {
-            alert(err.response?.data?.detail || 'Proje oluşturulurken bir hata oluştu');
+            alert(err.response?.data?.detail || 'Proje kaydedilirken bir hata oluştu');
         } finally {
-            setCreating(false);
+            setSaving(false);
         }
+    };
+
+    const openCreateModal = () => {
+        setProjectForm({ name: '', description: '', status: 'IN_PROGRESS' });
+        setIsCreateModalOpen(true);
+    };
+
+    const openEditModal = (e: React.MouseEvent, project: any) => {
+        e.stopPropagation(); // prevent card click
+        setProjectForm({
+            name: project.name,
+            description: project.description || '',
+            status: project.status || 'IN_PROGRESS'
+        });
+        setEditingProject(project);
     };
 
     const handleLogout = () => {
@@ -108,7 +130,7 @@ const AdminProjects: React.FC = () => {
                         <p className="text-slate-400 mt-2 text-sm">Manage data collection instances and stakeholder analytics.</p>
                     </div>
                     <button
-                        onClick={() => setIsModalOpen(true)}
+                        onClick={openCreateModal}
                         className="neon-btn"
                     >
                         <Plus className="h-5 w-5" /> New Project
@@ -129,14 +151,18 @@ const AdminProjects: React.FC = () => {
                         <p className="text-[11px] font-bold text-cyan-500/80 uppercase tracking-widest mb-2 flex items-center gap-2">
                             <Clock className="h-4 w-4" /> In Progress
                         </p>
-                        <h3 className="text-4xl font-black text-cyan-400">{projects.length}</h3>
+                        <h3 className="text-4xl font-black text-cyan-400">
+                            {projects.filter(p => !p.status || p.status === 'IN_PROGRESS').length}
+                        </h3>
                     </div>
                     <div className="glass-card rounded-2xl p-6 border-white/5 relative overflow-hidden group">
                         <div className="absolute -right-4 -top-4 w-28 h-28 bg-emerald-500/10 rounded-full blur-2xl group-hover:bg-emerald-500/20 transition-all"></div>
                         <p className="text-[11px] font-bold text-emerald-500/80 uppercase tracking-widest mb-2 flex items-center gap-2">
                             <Shield className="h-4 w-4" /> Completed
                         </p>
-                        <h3 className="text-4xl font-black text-emerald-400">0</h3>
+                        <h3 className="text-4xl font-black text-emerald-400">
+                            {projects.filter(p => p.status === 'COMPLETED').length}
+                        </h3>
                     </div>
                 </div>
 
@@ -168,13 +194,31 @@ const AdminProjects: React.FC = () => {
                                 <div className="absolute top-0 left-0 w-1 h-full bg-cyan-500 opacity-0 group-hover:opacity-100 transition-opacity"></div>
 
                                 <div className="flex justify-between items-start mb-5">
-                                    <div className="h-12 w-12 bg-slate-800/80 border border-white/5 rounded-xl flex items-center justify-center text-cyan-400 group-hover:bg-cyan-500/20 group-hover:border-cyan-500/40 transition-all">
-                                        <MapIcon className="h-6 w-6" />
+                                    <div className="flex gap-3">
+                                        <div className="h-12 w-12 bg-slate-800/80 border border-white/5 rounded-xl flex items-center justify-center text-cyan-400 group-hover:bg-cyan-500/20 group-hover:border-cyan-500/40 transition-all">
+                                            <MapIcon className="h-6 w-6" />
+                                        </div>
+                                        <div className="flex flex-col justify-center">
+                                            {(!project.status || project.status === 'IN_PROGRESS') ? (
+                                                <span className="flex w-max items-center gap-1.5 text-[10px] font-bold text-cyan-400 bg-cyan-950/50 border border-cyan-800/50 px-2.5 py-1 rounded-full uppercase tracking-wider">
+                                                    <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse"></span>
+                                                    IN PROGRESS
+                                                </span>
+                                            ) : (
+                                                <span className="flex w-max items-center gap-1.5 text-[10px] font-bold text-emerald-400 bg-emerald-950/50 border border-emerald-800/50 px-2.5 py-1 rounded-full uppercase tracking-wider">
+                                                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                                                    COMPLETED
+                                                </span>
+                                            )}
+                                        </div>
                                     </div>
-                                    <span className="flex items-center gap-1.5 text-[10px] font-bold text-cyan-400 bg-cyan-950/50 border border-cyan-800/50 px-2.5 py-1 rounded-full uppercase tracking-wider">
-                                        <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse"></span>
-                                        Active
-                                    </span>
+                                    <button
+                                        onClick={(e) => openEditModal(e, project)}
+                                        className="p-2 text-slate-500 hover:text-cyan-400 hover:bg-slate-800 rounded-xl transition-all"
+                                        title="Proje Ayarları"
+                                    >
+                                        <Settings className="h-5 w-5" />
+                                    </button>
                                 </div>
                                 <h3 className="text-xl font-bold text-white mb-3 group-hover:text-cyan-300 transition-colors">
                                     {project.name}
@@ -197,8 +241,8 @@ const AdminProjects: React.FC = () => {
                 </div>
             </main>
 
-            {/* Create Project Modal */}
-            {isModalOpen && (
+            {/* Create/Edit Project Modal */}
+            {(isCreateModalOpen || editingProject) && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-in fade-in duration-200">
                     <div className="glass-panel w-full max-w-lg rounded-3xl overflow-hidden animate-in zoom-in-95 duration-200">
                         <div className="p-6 border-b border-white/10 flex justify-between items-center bg-slate-900/40">
@@ -206,24 +250,27 @@ const AdminProjects: React.FC = () => {
                                 <div className="h-10 w-10 bg-cyan-500/20 border border-cyan-500/30 rounded-xl flex items-center justify-center text-cyan-400">
                                     <FolderPlus className="h-5 w-5" />
                                 </div>
-                                Initialize Project
+                                {editingProject ? 'Proje Ayarları' : 'Initialize Project'}
                             </h3>
                             <button
-                                onClick={() => setIsModalOpen(false)}
+                                onClick={() => {
+                                    setIsCreateModalOpen(false);
+                                    setEditingProject(null);
+                                }}
                                 className="p-2 hover:bg-white/10 rounded-xl transition-colors text-slate-400 hover:text-white"
                             >
                                 <X className="h-5 w-5" />
                             </button>
                         </div>
 
-                        <form onSubmit={handleCreateProject} className="p-8 space-y-6">
+                        <form onSubmit={handleSaveProject} className="p-8 space-y-6">
                             <div className="space-y-2">
                                 <label className="text-xs font-bold text-slate-400 uppercase tracking-widest px-1">Project Name</label>
                                 <input
                                     type="text"
                                     required
-                                    value={newProject.name}
-                                    onChange={(e) => setNewProject({ ...newProject, name: e.target.value })}
+                                    value={projectForm.name}
+                                    onChange={(e) => setProjectForm({ ...projectForm, name: e.target.value })}
                                     placeholder="e.g. Urban Redevelopment Zone A"
                                     className="w-full bg-slate-950/50 border border-white/10 py-3.5 px-4 rounded-2xl focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50 transition-all text-white font-medium placeholder:text-slate-600"
                                 />
@@ -233,27 +280,44 @@ const AdminProjects: React.FC = () => {
                                 <label className="text-xs font-bold text-slate-400 uppercase tracking-widest px-1">Description</label>
                                 <textarea
                                     rows={4}
-                                    value={newProject.description}
-                                    onChange={(e) => setNewProject({ ...newProject, description: e.target.value })}
+                                    value={projectForm.description}
+                                    onChange={(e) => setProjectForm({ ...projectForm, description: e.target.value })}
                                     placeholder="Brief overview of spatial analysis objectives..."
                                     className="w-full bg-slate-950/50 border border-white/10 py-3.5 px-4 rounded-2xl focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50 transition-all text-white font-medium placeholder:text-slate-600 resize-none"
                                 />
                             </div>
 
+                            {editingProject && (
+                                <div className="space-y-2">
+                                    <label className="text-xs font-bold text-slate-400 uppercase tracking-widest px-1">Status</label>
+                                    <select
+                                        value={projectForm.status}
+                                        onChange={(e) => setProjectForm({ ...projectForm, status: e.target.value })}
+                                        className="w-full bg-slate-950/50 border border-white/10 py-3.5 px-4 rounded-2xl focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50 transition-all text-white font-medium"
+                                    >
+                                        <option value="IN_PROGRESS">IN PROGRESS</option>
+                                        <option value="COMPLETED">COMPLETED</option>
+                                    </select>
+                                </div>
+                            )}
+
                             <div className="flex gap-4 pt-6 mt-4 border-t border-white/10">
                                 <button
                                     type="button"
-                                    onClick={() => setIsModalOpen(false)}
+                                    onClick={() => {
+                                        setIsCreateModalOpen(false);
+                                        setEditingProject(null);
+                                    }}
                                     className="flex-1 px-4 py-4 rounded-2xl font-bold text-slate-400 hover:text-white hover:bg-white/5 transition-all border border-transparent hover:border-white/10"
                                 >
                                     Cancel
                                 </button>
                                 <button
                                     type="submit"
-                                    disabled={creating}
+                                    disabled={saving}
                                     className="flex-[2] neon-btn disabled:opacity-50 disabled:shadow-none"
                                 >
-                                    {creating ? 'Initializing...' : 'Deploy Project Instance'}
+                                    {saving ? 'Saving...' : (editingProject ? 'Save Changes' : 'Deploy Project Instance')}
                                 </button>
                             </div>
                         </form>

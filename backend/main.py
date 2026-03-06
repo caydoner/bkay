@@ -53,6 +53,7 @@ async def startup_event():
             await conn.execute(text("ALTER TABLE project_columns ADD COLUMN IF NOT EXISTS config JSONB DEFAULT '{}';"))
             await conn.execute(text("ALTER TABLE project_grid_cells ADD COLUMN IF NOT EXISTS area_id UUID;"))
             await conn.execute(text("ALTER TABLE stakeholder_responses ADD COLUMN IF NOT EXISTS area_id UUID;"))
+            await conn.execute(text("ALTER TABLE projects ADD COLUMN IF NOT EXISTS status VARCHAR DEFAULT 'IN_PROGRESS';"))
         except Exception as e:
             print(f"Migration check skip/failure: {e}")
 
