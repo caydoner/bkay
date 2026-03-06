@@ -22,6 +22,8 @@ const AdminProjects: React.FC = () => {
     const [editingProject, setEditingProject] = useState<any | null>(null);
     const [projectForm, setProjectForm] = useState({ name: '', description: '', status: 'IN_PROGRESS' });
     const [saving, setSaving] = useState(false);
+    const [deleting, setDeleting] = useState(false);
+    const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -60,9 +62,25 @@ const AdminProjects: React.FC = () => {
         }
     };
 
+    const handleDeleteProject = async () => {
+        if (!editingProject) return;
+        setDeleting(true);
+        try {
+            await api.delete(`/projects/${editingProject.id}`);
+            setEditingProject(null);
+            setIsDeleteConfirmOpen(false);
+            fetchProjects();
+        } catch (err: any) {
+            alert(err.response?.data?.detail || 'Proje silinirken bir hata oluştu');
+        } finally {
+            setDeleting(false);
+        }
+    };
+
     const openCreateModal = () => {
         setProjectForm({ name: '', description: '', status: 'IN_PROGRESS' });
         setIsCreateModalOpen(true);
+        setIsDeleteConfirmOpen(false);
     };
 
     const openEditModal = (e: React.MouseEvent, project: any) => {
@@ -73,6 +91,7 @@ const AdminProjects: React.FC = () => {
             status: project.status || 'IN_PROGRESS'
         });
         setEditingProject(project);
+        setIsDeleteConfirmOpen(false);
     };
 
     const handleLogout = () => {
@@ -256,6 +275,7 @@ const AdminProjects: React.FC = () => {
                                 onClick={() => {
                                     setIsCreateModalOpen(false);
                                     setEditingProject(null);
+                                    setIsDeleteConfirmOpen(false);
                                 }}
                                 className="p-2 hover:bg-white/10 rounded-xl transition-colors text-slate-400 hover:text-white"
                             >
@@ -263,64 +283,106 @@ const AdminProjects: React.FC = () => {
                             </button>
                         </div>
 
-                        <form onSubmit={handleSaveProject} className="p-8 space-y-6">
-                            <div className="space-y-2">
-                                <label className="text-xs font-bold text-slate-400 uppercase tracking-widest px-1">Project Name</label>
-                                <input
-                                    type="text"
-                                    required
-                                    value={projectForm.name}
-                                    onChange={(e) => setProjectForm({ ...projectForm, name: e.target.value })}
-                                    placeholder="e.g. Urban Redevelopment Zone A"
-                                    className="w-full bg-slate-950/50 border border-white/10 py-3.5 px-4 rounded-2xl focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50 transition-all text-white font-medium placeholder:text-slate-600"
-                                />
-                            </div>
-
-                            <div className="space-y-2">
-                                <label className="text-xs font-bold text-slate-400 uppercase tracking-widest px-1">Description</label>
-                                <textarea
-                                    rows={4}
-                                    value={projectForm.description}
-                                    onChange={(e) => setProjectForm({ ...projectForm, description: e.target.value })}
-                                    placeholder="Brief overview of spatial analysis objectives..."
-                                    className="w-full bg-slate-950/50 border border-white/10 py-3.5 px-4 rounded-2xl focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50 transition-all text-white font-medium placeholder:text-slate-600 resize-none"
-                                />
-                            </div>
-
-                            {editingProject && (
-                                <div className="space-y-2">
-                                    <label className="text-xs font-bold text-slate-400 uppercase tracking-widest px-1">Status</label>
-                                    <select
-                                        value={projectForm.status}
-                                        onChange={(e) => setProjectForm({ ...projectForm, status: e.target.value })}
-                                        className="w-full bg-slate-950/50 border border-white/10 py-3.5 px-4 rounded-2xl focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50 transition-all text-white font-medium"
-                                    >
-                                        <option value="IN_PROGRESS">IN PROGRESS</option>
-                                        <option value="COMPLETED">COMPLETED</option>
-                                    </select>
+                        {isDeleteConfirmOpen ? (
+                            <div className="p-8 space-y-6">
+                                <div className="bg-red-500/10 border border-red-500/30 rounded-2xl p-6 text-center">
+                                    <Shield className="h-12 w-12 text-red-400 mx-auto mb-4" />
+                                    <h4 className="text-xl font-bold text-white mb-2">Dikkat! Proje Siliniyor</h4>
+                                    <p className="text-red-300 font-medium leading-relaxed">
+                                        Bu projeyi silmek istediğinize emin misiniz? Projeyle beraber projede toplanmış olan <strong>tüm veriler (gridler, formlar, cevaplar)</strong> de kalıcı olarak silinecektir.
+                                        <br /><br />Bu işlem geri alınamaz!
+                                    </p>
                                 </div>
-                            )}
-
-                            <div className="flex gap-4 pt-6 mt-4 border-t border-white/10">
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        setIsCreateModalOpen(false);
-                                        setEditingProject(null);
-                                    }}
-                                    className="flex-1 px-4 py-4 rounded-2xl font-bold text-slate-400 hover:text-white hover:bg-white/5 transition-all border border-transparent hover:border-white/10"
-                                >
-                                    Cancel
-                                </button>
-                                <button
-                                    type="submit"
-                                    disabled={saving}
-                                    className="flex-[2] neon-btn disabled:opacity-50 disabled:shadow-none"
-                                >
-                                    {saving ? 'Saving...' : (editingProject ? 'Save Changes' : 'Deploy Project Instance')}
-                                </button>
+                                <div className="flex gap-4 pt-4">
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsDeleteConfirmOpen(false)}
+                                        className="flex-1 px-4 py-4 rounded-2xl font-bold text-slate-400 hover:text-white hover:bg-white/5 transition-all border border-transparent hover:border-white/10"
+                                    >
+                                        Vazgeç
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={handleDeleteProject}
+                                        disabled={deleting}
+                                        className="flex-[2] bg-red-500 hover:bg-red-600 text-white font-bold py-4 px-4 rounded-2xl transition-all shadow-lg shadow-red-500/20 disabled:opacity-50"
+                                    >
+                                        {deleting ? 'Siliniyor...' : 'Evet, Kalıcı Olarak Sil'}
+                                    </button>
+                                </div>
                             </div>
-                        </form>
+                        ) : (
+                            <form onSubmit={handleSaveProject} className="p-8 space-y-6">
+                                <div className="space-y-2">
+                                    <label className="text-xs font-bold text-slate-400 uppercase tracking-widest px-1">Project Name</label>
+                                    <input
+                                        type="text"
+                                        required
+                                        value={projectForm.name}
+                                        onChange={(e) => setProjectForm({ ...projectForm, name: e.target.value })}
+                                        placeholder="e.g. Urban Redevelopment Zone A"
+                                        className="w-full bg-slate-950/50 border border-white/10 py-3.5 px-4 rounded-2xl focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50 transition-all text-white font-medium placeholder:text-slate-600"
+                                    />
+                                </div>
+
+                                <div className="space-y-2">
+                                    <label className="text-xs font-bold text-slate-400 uppercase tracking-widest px-1">Description</label>
+                                    <textarea
+                                        rows={4}
+                                        value={projectForm.description}
+                                        onChange={(e) => setProjectForm({ ...projectForm, description: e.target.value })}
+                                        placeholder="Brief overview of spatial analysis objectives..."
+                                        className="w-full bg-slate-950/50 border border-white/10 py-3.5 px-4 rounded-2xl focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50 transition-all text-white font-medium placeholder:text-slate-600 resize-none"
+                                    />
+                                </div>
+
+                                {editingProject && (
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-bold text-slate-400 uppercase tracking-widest px-1">Status</label>
+                                        <select
+                                            value={projectForm.status}
+                                            onChange={(e) => setProjectForm({ ...projectForm, status: e.target.value })}
+                                            className="w-full bg-slate-950/50 border border-white/10 py-3.5 px-4 rounded-2xl focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50 transition-all text-white font-medium"
+                                        >
+                                            <option value="IN_PROGRESS">IN PROGRESS</option>
+                                            <option value="COMPLETED">COMPLETED</option>
+                                        </select>
+                                    </div>
+                                )}
+
+                                <div className="flex gap-4 pt-6 mt-4 border-t border-white/10 items-center justify-between pointer-events-auto">
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setIsCreateModalOpen(false);
+                                            setEditingProject(null);
+                                        }}
+                                        className="px-4 py-4 rounded-2xl font-bold text-slate-400 hover:text-white hover:bg-white/5 transition-all border border-transparent hover:border-white/10"
+                                    >
+                                        Cancel
+                                    </button>
+
+                                    <div className="flex gap-3">
+                                        {editingProject && (
+                                            <button
+                                                type="button"
+                                                onClick={() => setIsDeleteConfirmOpen(true)}
+                                                className="px-6 py-4 rounded-2xl font-bold text-red-400 hover:text-white hover:bg-red-500/10 transition-all border border-red-500/20 hover:border-red-500/50"
+                                            >
+                                                Sil
+                                            </button>
+                                        )}
+                                        <button
+                                            type="submit"
+                                            disabled={saving}
+                                            className="neon-btn px-8 disabled:opacity-50 disabled:shadow-none bg-cyan-500 text-white font-bold py-4 rounded-2xl hover:bg-cyan-600 transition-colors"
+                                        >
+                                            {saving ? 'Saving...' : (editingProject ? 'Save Changes' : 'Deploy Project Instance')}
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                        )}
                     </div>
                 </div>
             )}

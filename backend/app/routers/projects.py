@@ -53,6 +53,17 @@ async def update_project(project_id: UUID, update_data: dict, db: AsyncSession =
     await db.refresh(project)
     return project
 
+@router.delete("/{project_id}", status_code=204)
+async def delete_project(project_id: UUID, db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(ProjectModel).where(ProjectModel.id == project_id))
+    project = result.scalar_one_or_none()
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    
+    await db.delete(project)
+    await db.commit()
+    return None
+
 @router.get("/users/public")
 async def get_public_users(db: AsyncSession = Depends(get_db)):
     from app.models.user import User as UserModel
