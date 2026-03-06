@@ -550,76 +550,77 @@ const MapContainer: React.FC<MapContainerProps> = ({
                         </div>
                     </div>
                 )}
-                {/* Distance Tool Label */}
-                {measurement && (
-                    <div className="absolute top-4 left-4 z-10 animate-in slide-in-from-left-4 duration-300">
-                        <div className="bg-white/90 backdrop-blur-md p-3 rounded-2xl shadow-xl border border-amber-100 flex items-center gap-3">
-                            <div className="h-8 w-8 bg-amber-100 text-amber-600 rounded-xl flex items-center justify-center">
-                                <Ruler className="h-4 w-4" />
-                            </div>
-                            <div className="flex flex-col">
-                                <span className="text-[10px] font-bold text-amber-700 uppercase leading-none mb-1">Mesafe</span>
-                                <div className="flex gap-2">
-                                    <span className="text-xs font-bold text-gray-800">{measurement.km.toFixed(2)} km</span>
-                                    <span className="text-xs font-medium text-gray-400">{measurement.nm.toFixed(2)} nm</span>
-                                </div>
-                            </div>
-                            <button
-                                onClick={() => {
-                                    setMeasurement(null);
-                                    measurePoints.current = [];
-                                    const source = mapRef.current?.getSource('measure-line') as maplibregl.GeoJSONSource;
-                                    if (source) source.setData({ type: 'FeatureCollection', features: [] });
-                                }}
-                                className="p-1 hover:bg-gray-100 rounded-lg text-gray-400"
-                            >
-                                <X className="h-4 w-4" />
-                            </button>
-                        </div>
-                    </div>
-                )}
+            </div>
 
-                {multiSelectMode && selectedCells.length > 0 && (
-                    <div className="absolute top-4 left-[140px] z-10 bg-cyan-500/90 text-white px-3 py-2 rounded-xl shadow-lg">
-                        <span className="text-xs font-bold">{selectedCells.length} hücre seçili</span>
-                    </div>
-                )}
-                {showMeasureTool && (
-                    <div className="absolute top-4 left-4 z-10 flex flex-col gap-2">
+            {/* Distance Tool Label */}
+            {measurement && (
+                <div className="absolute top-4 left-4 z-10 animate-in slide-in-from-left-4 duration-300">
+                    <div className="bg-white/90 backdrop-blur-md p-3 rounded-2xl shadow-xl border border-amber-100 flex items-center gap-3">
+                        <div className="h-8 w-8 bg-amber-100 text-amber-600 rounded-xl flex items-center justify-center">
+                            <Ruler className="h-4 w-4" />
+                        </div>
+                        <div className="flex flex-col">
+                            <span className="text-[10px] font-bold text-amber-700 uppercase leading-none mb-1">Mesafe</span>
+                            <div className="flex gap-2">
+                                <span className="text-xs font-bold text-gray-800">{measurement.km.toFixed(2)} km</span>
+                                <span className="text-xs font-medium text-gray-400">{measurement.nm.toFixed(2)} nm</span>
+                            </div>
+                        </div>
                         <button
                             onClick={() => {
-                                if (isMeasuring) {
-                                    setIsMeasuring(false); isMeasuringRef.current = false; measurePoints.current = []; setMeasurement(null);
-                                    const source = mapRef.current?.getSource('measure-line') as maplibregl.GeoJSONSource;
-                                    if (source) source.setData({ type: 'FeatureCollection', features: [] });
-                                    if (mapRef.current) mapRef.current.getCanvas().style.cursor = '';
-                                } else {
-                                    setIsMeasuring(true); isMeasuringRef.current = true;
-                                    if (mapRef.current) mapRef.current.getCanvas().style.cursor = 'crosshair';
-                                }
+                                setMeasurement(null);
+                                measurePoints.current = [];
+                                const source = mapRef.current?.getSource('measure-line') as maplibregl.GeoJSONSource;
+                                if (source) source.setData({ type: 'FeatureCollection', features: [] });
                             }}
-                            className={`p-2.5 rounded-xl shadow-lg border transition-all flex items-center gap-2 font-bold text-xs ${isMeasuring ? 'bg-amber-500 text-white border-amber-600' : 'bg-white text-gray-700 border-gray-100 hover:bg-gray-50'}`}
+                            className="p-1 hover:bg-gray-100 rounded-lg text-gray-400"
                         >
-                            <Ruler className="h-4 w-4" /> {isMeasuring ? 'Ölçümü Bitir' : 'Mesafe Ölç'}
+                            <X className="h-4 w-4" />
                         </button>
-                        {measurement && (
-                            <div className="bg-white/95 backdrop-blur-md p-3 rounded-xl shadow-xl border border-gray-100 animate-in fade-in zoom-in duration-200">
-                                <div className="flex flex-col gap-1.5">
-                                    <div className="flex items-center justify-between gap-4">
-                                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Kilometre</span>
-                                        <span className="text-sm font-black text-primary-600">{measurement.km.toFixed(2)} km</span>
-                                    </div>
-                                    <div className="h-px bg-gray-100 w-full" />
-                                    <div className="flex items-center justify-between gap-4">
-                                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Deniz Mili</span>
-                                        <span className="text-sm font-black text-amber-600">{measurement.nm.toFixed(2)} nm</span>
-                                    </div>
+                    </div>
+                </div>
+            )}
+
+            {multiSelectMode && selectedCells.length > 0 && (
+                <div className="absolute top-4 left-[140px] z-10 bg-cyan-500/90 text-white px-3 py-2 rounded-xl shadow-lg">
+                    <span className="text-xs font-bold">{selectedCells.length} hücre seçili</span>
+                </div>
+            )}
+            {showMeasureTool && (
+                <div className="absolute top-4 left-4 z-10 flex flex-col gap-2">
+                    <button
+                        onClick={() => {
+                            if (isMeasuring) {
+                                setIsMeasuring(false); isMeasuringRef.current = false; measurePoints.current = []; setMeasurement(null);
+                                const source = mapRef.current?.getSource('measure-line') as maplibregl.GeoJSONSource;
+                                if (source) source.setData({ type: 'FeatureCollection', features: [] });
+                                if (mapRef.current) mapRef.current.getCanvas().style.cursor = '';
+                            } else {
+                                setIsMeasuring(true); isMeasuringRef.current = true;
+                                if (mapRef.current) mapRef.current.getCanvas().style.cursor = 'crosshair';
+                            }
+                        }}
+                        className={`p-2.5 rounded-xl shadow-lg border transition-all flex items-center gap-2 font-bold text-xs ${isMeasuring ? 'bg-amber-500 text-white border-amber-600' : 'bg-white text-gray-700 border-gray-100 hover:bg-gray-50'}`}
+                    >
+                        <Ruler className="h-4 w-4" /> {isMeasuring ? 'Ölçümü Bitir' : 'Mesafe Ölç'}
+                    </button>
+                    {measurement && (
+                        <div className="bg-white/95 backdrop-blur-md p-3 rounded-xl shadow-xl border border-gray-100 animate-in fade-in zoom-in duration-200">
+                            <div className="flex flex-col gap-1.5">
+                                <div className="flex items-center justify-between gap-4">
+                                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Kilometre</span>
+                                    <span className="text-sm font-black text-primary-600">{measurement.km.toFixed(2)} km</span>
+                                </div>
+                                <div className="h-px bg-gray-100 w-full" />
+                                <div className="flex items-center justify-between gap-4">
+                                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Deniz Mili</span>
+                                    <span className="text-sm font-black text-amber-600">{measurement.nm.toFixed(2)} nm</span>
                                 </div>
                             </div>
-                        )}
-                    </div>
-                )}
-            </div>
+                        </div>
+                    )}
+                </div>
+            )}
         </div>
     );
 };
